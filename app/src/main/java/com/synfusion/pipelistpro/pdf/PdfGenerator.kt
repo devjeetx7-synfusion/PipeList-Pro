@@ -31,8 +31,6 @@ object PdfGenerator {
         // Group items by category
         val groupedItems = project.items.groupBy { it.category }
 
-        var index = 1
-
         groupedItems.forEach { (category, items) ->
             // Draw Category Header
             if (y + 40f > CONTENT_BOTTOM_LIMIT) {
@@ -51,9 +49,11 @@ object PdfGenerator {
             canvas.drawText("$category Material List", MARGIN, y, paint)
             y += 25f
 
+            var index = 1
+
             items.forEach { item ->
                 // Check if we need a new page for item
-                val requiredHeight = if (item.notes.isNotEmpty()) 35f else 20f
+                val requiredHeight = 20f // Removed unused note height
                 if (y + requiredHeight > CONTENT_BOTTOM_LIMIT) {
                     drawFooter(canvas, paint)
                     pdfDocument.finishPage(page)

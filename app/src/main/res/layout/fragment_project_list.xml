@@ -14,8 +14,6 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@color/primary"
-            app:navigationIcon="@drawable/ic_back"
-            app:navigationIconTint="@color/white"
             app:title="Material List"
             app:titleTextColor="@color/white" />
 

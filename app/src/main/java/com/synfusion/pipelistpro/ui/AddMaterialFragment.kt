@@ -67,6 +67,12 @@ class AddMaterialFragment : Fragment() {
             findNavController().navigate(R.id.action_addMaterial_to_projectList)
         }
 
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object : androidx.activity.OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                findNavController().popBackStack(R.id.homeFragment, false)
+            }
+        })
+
         binding.etSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -75,7 +81,7 @@ class AddMaterialFragment : Fragment() {
             override fun afterTextChanged(s: Editable?) {}
         })
 
-        binding.chipGroupCategories.setOnCheckedStateChangeListener { group, checkedIds ->
+        binding.chipGroupCategories.setOnCheckedStateChangeListener { _, _ ->
             val query = binding.etSearch.text.toString()
             filterMaterials(query, getSelectedCategory())
         }

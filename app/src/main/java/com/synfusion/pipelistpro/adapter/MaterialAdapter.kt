@@ -12,9 +12,10 @@ class MaterialAdapter(
     private val onAddClick: (MaterialItem, String, Int) -> Unit
 ) : RecyclerView.Adapter<MaterialAdapter.ViewHolder>() {
 
-    class ViewHolder(val binding: ItemMaterialBinding) : RecyclerView.ViewHolder(binding.root) {
-        var currentQuantity = 1
-    }
+    // Store quantities outside of ViewHolder to prevent state loss on recycling
+    private val quantityMap = mutableMapOf<String, Int>()
+
+    class ViewHolder(val binding: ItemMaterialBinding) : RecyclerView.ViewHolder(binding.root)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ItemMaterialBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -23,6 +24,12 @@ class MaterialAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = materials[position]
+
+        // Ensure map has entry for item
+        if (!quantityMap.containsKey(item.id)) {
+            quantityMap[item.id] = 1
+        }
+
         holder.binding.apply {
             tvMaterialName.text = item.name
             tvCategory.text = item.category
@@ -31,27 +38,30 @@ class MaterialAdapter(
             sizeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             spinnerSize.adapter = sizeAdapter
 
-            holder.currentQuantity = 1
-            tvQuantity.text = holder.currentQuantity.toString()
+            tvQuantity.text = quantityMap[item.id].toString()
 
             btnIncreaseQty.setOnClickListener {
-                holder.currentQuantity++
-                tvQuantity.text = holder.currentQuantity.toString()
+                var currentQty = quantityMap[item.id] ?: 1
+                currentQty++
+                quantityMap[item.id] = currentQty
+                tvQuantity.text = currentQty.toString()
             }
 
             btnDecreaseQty.setOnClickListener {
-                if (holder.currentQuantity > 1) {
-                    holder.currentQuantity--
-                    tvQuantity.text = holder.currentQuantity.toString()
+                var currentQty = quantityMap[item.id] ?: 1
+                if (currentQty > 1) {
+                    currentQty--
+                    quantityMap[item.id] = currentQty
+                    tvQuantity.text = currentQty.toString()
                 }
             }
 
             btnAdd.setOnClickListener {
                 val selectedSize = if (item.sizes.isNotEmpty()) spinnerSize.selectedItem.toString() else "Standard"
-                onAddClick(item, selectedSize, holder.currentQuantity)
+                onAddClick(item, selectedSize, quantityMap[item.id] ?: 1)
 
                 // Reset quantity after adding
-                holder.currentQuantity = 1
+                quantityMap[item.id] = 1
                 tvQuantity.text = "1"
             }
         }
