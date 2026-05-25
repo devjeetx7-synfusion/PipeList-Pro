@@ -53,7 +53,18 @@
             android:text="15 Items"
             android:textStyle="bold"
             android:textColor="@color/secondary"
-            android:layout_marginEnd="16dp"/>
+            android:layout_marginEnd="12dp"/>
+
+        <ImageView
+            android:id="@+id/btnDuplicate"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_copy"
+            app:tint="@color/primary"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginEnd="12dp"/>
 
         <ImageView
             android:id="@+id/btnDeleteProject"

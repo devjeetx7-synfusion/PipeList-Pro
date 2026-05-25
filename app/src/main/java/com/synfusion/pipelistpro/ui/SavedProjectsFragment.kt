@@ -37,6 +37,10 @@ class SavedProjectsFragment : Fragment() {
                 viewModel.loadProject(project)
                 findNavController().navigate(R.id.action_savedProjects_to_projectList)
             },
+            onDuplicateClick = { project ->
+                viewModel.duplicateProject(project)
+                Toast.makeText(context, "Project duplicated", Toast.LENGTH_SHORT).show()
+            },
             onDeleteClick = { project ->
                 AlertDialog.Builder(requireContext())
                     .setTitle("Delete Project")
