@@ -32,29 +32,37 @@ class ProjectListFragment : Fragment() {
 
         binding.toolbar.setNavigationOnClickListener { findNavController().navigateUp() }
 
-        adapter = ProjectItemAdapter(emptyList()) { position ->
-            viewModel.removeItemFromCurrentProject(position)
-        }
+        adapter = ProjectItemAdapter(
+            items = emptyList(),
+            onIncreaseQty = { item, newQty ->
+                viewModel.updateItemQuantityByItem(item, newQty)
+            },
+            onDecreaseQty = { item, newQty ->
+                viewModel.updateItemQuantityByItem(item, newQty)
+            },
+            onDeleteClick = { item ->
+                viewModel.removeItemByItem(item)
+            }
+        )
 
         binding.rvProjectItems.layoutManager = LinearLayoutManager(context)
         binding.rvProjectItems.adapter = adapter
 
         viewModel.currentProject.observe(viewLifecycleOwner) { project ->
             project?.let {
-                binding.tvProjectDetails.text = "${it.projectName} | ${it.clientName}"
-                binding.tvTotalSummary.text = "Total Items: ${it.items.size}"
+                binding.tvProjectDetails.text = it.projectName
 
-                val breakdown = it.items.groupBy { item -> item.category }
-                    .map { (cat, list) -> "$cat: ${list.size}" }
-                    .joinToString("  |  ")
-                binding.tvCategoryBreakdown.text = breakdown
+                val totalQty = it.items.sumOf { item -> item.quantity }
+                binding.tvTotalSummary.text = "Total Items: ${it.items.size} | Total Qty: $totalQty"
 
-                adapter.updateList(it.items)
+                // Sort items by category to group them implicitly
+                val sortedItems = it.items.sortedBy { item -> item.category }
+                adapter.updateList(sortedItems)
             }
         }
 
         binding.fabAdd.setOnClickListener {
-            findNavController().navigate(R.id.action_projectList_to_materialSearch)
+            findNavController().navigate(R.id.action_projectList_to_addMaterial)
         }
 
         binding.btnSave.setOnClickListener {

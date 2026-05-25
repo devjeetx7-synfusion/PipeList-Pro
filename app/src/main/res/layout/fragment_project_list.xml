@@ -30,9 +30,10 @@
                 android:id="@+id/tvProjectDetails"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Project Name | Client"
+                android:text="Project Name"
                 android:textColor="@color/white"
-                android:textSize="14sp" />
+                android:textSize="18sp"
+                android:textStyle="bold"/>
 
             <TextView
                 android:id="@+id/tvTotalSummary"
@@ -41,17 +42,7 @@
                 android:layout_marginTop="4dp"
                 android:text="Total Items: 0"
                 android:textColor="@color/white"
-                android:textStyle="bold"
-                android:textSize="16sp" />
-
-            <TextView
-                android:id="@+id/tvCategoryBreakdown"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:text=""
-                android:textColor="@color/white"
-                android:textSize="12sp" />
+                android:textSize="14sp" />
 
         </LinearLayout>
 

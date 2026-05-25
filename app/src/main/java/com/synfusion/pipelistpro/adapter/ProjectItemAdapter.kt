@@ -9,7 +9,9 @@ import com.synfusion.pipelistpro.model.ProjectItem
 
 class ProjectItemAdapter(
     private var items: List<ProjectItem>,
-    private val onDeleteClick: (Int) -> Unit
+    private val onIncreaseQty: (ProjectItem, Int) -> Unit,
+    private val onDecreaseQty: (ProjectItem, Int) -> Unit,
+    private val onDeleteClick: (ProjectItem) -> Unit
 ) : RecyclerView.Adapter<ProjectItemAdapter.ViewHolder>() {
 
     class ViewHolder(val binding: ItemProjectItemBinding) : RecyclerView.ViewHolder(binding.root)
@@ -23,7 +25,8 @@ class ProjectItemAdapter(
         val item = items[position]
         holder.binding.apply {
             tvMaterialName.text = item.materialName
-            tvDetails.text = "${item.category} | ${item.size}"
+            val sizePrefix = if (item.size != "Standard" && item.size.isNotEmpty()) "${item.size} " else ""
+            tvDetails.text = "${item.category} | $sizePrefix"
             tvQuantity.text = "${item.quantity} ${item.unit}"
 
             if (item.notes.isNotEmpty()) {
@@ -33,7 +36,17 @@ class ProjectItemAdapter(
                 tvNotes.visibility = View.GONE
             }
 
-            btnDelete.setOnClickListener { onDeleteClick(holder.adapterPosition) }
+            btnIncreaseQty.setOnClickListener {
+                onIncreaseQty(item, item.quantity + 1)
+            }
+
+            btnDecreaseQty.setOnClickListener {
+                if (item.quantity > 1) {
+                    onDecreaseQty(item, item.quantity - 1)
+                }
+            }
+
+            btnDelete.setOnClickListener { onDeleteClick(item) }
         }
     }
 
