@@ -1,23 +1,89 @@
 package com.synfusion.pipelistpro.ui
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-import androidx.navigation.fragment.NavHostFragment
-import androidx.navigation.ui.setupWithNavController
-import com.synfusion.pipelistpro.R
-import com.synfusion.pipelistpro.databinding.ActivityMainBinding
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.synfusion.pipelistpro.ui.components.ModernBottomNavigation
+import com.synfusion.pipelistpro.ui.screens.*
+import com.synfusion.pipelistpro.ui.theme.PipeListProTheme
+import com.synfusion.pipelistpro.viewmodel.ProjectViewModel
 
-class MainActivity : AppCompatActivity() {
-    private lateinit var binding: ActivityMainBinding
+class MainActivity : ComponentActivity() {
+    private val viewModel: ProjectViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        setContent {
+            PipeListProTheme {
+                MainApp(viewModel)
+            }
+        }
+    }
+}
 
-        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-        val navController = navHostFragment.navController
+@Composable
+fun MainApp(viewModel: ProjectViewModel) {
+    val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
 
-        binding.bottomNavigation.setupWithNavController(navController)
+    Scaffold(
+        bottomBar = {
+            if (currentRoute != "splash") {
+                ModernBottomNavigation(
+                    currentRoute = currentRoute,
+                    onNavigate = { route ->
+                        navController.navigate(route) {
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                )
+            }
+        }
+    ) { innerPadding ->
+        Box(modifier = Modifier.padding(innerPadding)) {
+            AppNavigation(navController, viewModel)
+        }
+    }
+}
+
+@Composable
+fun AppNavigation(navController: NavHostController, viewModel: ProjectViewModel) {
+    NavHost(navController = navController, startDestination = "splash") {
+        composable("splash") {
+            SplashScreen(navController)
+        }
+        composable("home") {
+            HomeScreen(viewModel, navController)
+        }
+        composable("material") {
+            MaterialScreen(viewModel, navController)
+        }
+        composable("project_list") {
+            ProjectListScreen(viewModel, navController)
+        }
+        composable("settings") {
+            SettingsScreen(viewModel, navController)
+        }
+        composable("statistics") {
+            StatisticsScreen(viewModel, navController)
+        }
     }
 }
