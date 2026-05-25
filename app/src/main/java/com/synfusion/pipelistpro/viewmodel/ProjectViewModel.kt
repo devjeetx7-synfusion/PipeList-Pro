@@ -34,15 +34,59 @@ class ProjectViewModel(application: Application) : AndroidViewModel(application)
         _savedProjects.value = storage.getProjects()
     }
 
-    fun startNewProject(name: String, client: String, location: String, date: String) {
+    fun startNewProject() {
+        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        val dateStr = sdf.format(Date())
+        val name = "Material List - $dateStr"
         val newProject = Project(
             id = UUID.randomUUID().toString(),
             projectName = name,
-            clientName = client,
-            location = location,
-            date = date
+            clientName = "",
+            location = "",
+            date = dateStr
         )
         _currentProject.value = newProject
+    }
+
+    fun updateItemQuantityByItem(targetItem: ProjectItem, newQuantity: Int) {
+        _currentProject.value?.let { project ->
+            val index = project.items.indexOfFirst { it === targetItem || (it.materialName == targetItem.materialName && it.size == targetItem.size) }
+            if (index != -1 && newQuantity > 0) {
+                val item = project.items[index]
+                val updatedItem = ProjectItem(
+                    materialName = item.materialName,
+                    category = item.category,
+                    size = item.size,
+                    quantity = newQuantity,
+                    unit = item.unit,
+                    notes = item.notes
+                )
+                project.items[index] = updatedItem
+                _currentProject.value = project
+            } else if (index != -1 && newQuantity == 0) {
+                removeItemByItem(targetItem)
+            }
+        }
+    }
+
+    fun updateItemQuantity(position: Int, newQuantity: Int) {
+        _currentProject.value?.let { project ->
+            if (position in project.items.indices && newQuantity > 0) {
+                val item = project.items[position]
+                val updatedItem = ProjectItem(
+                    materialName = item.materialName,
+                    category = item.category,
+                    size = item.size,
+                    quantity = newQuantity,
+                    unit = item.unit,
+                    notes = item.notes
+                )
+                project.items[position] = updatedItem
+                _currentProject.value = project
+            } else if (newQuantity == 0) {
+                removeItemFromCurrentProject(position)
+            }
+        }
     }
 
     fun loadProject(project: Project) {
@@ -53,6 +97,16 @@ class ProjectViewModel(application: Application) : AndroidViewModel(application)
         _currentProject.value?.let { project ->
             project.items.add(item)
             _currentProject.value = project // Trigger update
+        }
+    }
+
+    fun removeItemByItem(targetItem: ProjectItem) {
+        _currentProject.value?.let { project ->
+            val index = project.items.indexOfFirst { it === targetItem || (it.materialName == targetItem.materialName && it.size == targetItem.size) }
+            if (index != -1) {
+                project.items.removeAt(index)
+                _currentProject.value = project
+            }
         }
     }
 

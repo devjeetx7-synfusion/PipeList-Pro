@@ -23,60 +23,8 @@
         android:label="Home"
         tools:layout="@layout/fragment_home">
         <action
-            android:id="@+id/action_home_to_newProject"
-            app:destination="@id/newProjectFragment" />
-        <action
-            android:id="@+id/action_home_to_savedProjects"
-            app:destination="@id/savedProjectsFragment" />
-        <action
-            android:id="@+id/action_home_to_templates"
-            app:destination="@id/templatesFragment" />
-        <action
-            android:id="@+id/action_home_to_materialSearch"
-            app:destination="@id/materialSearchFragment" />
-        <action
-            android:id="@+id/action_home_to_settings"
-            app:destination="@id/settingsFragment" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/newProjectFragment"
-        android:name="com.synfusion.pipelistpro.ui.NewProjectFragment"
-        android:label="New Project"
-        tools:layout="@layout/fragment_new_project">
-        <action
-            android:id="@+id/action_newProject_to_materialSearch"
-            app:destination="@id/materialSearchFragment" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/savedProjectsFragment"
-        android:name="com.synfusion.pipelistpro.ui.SavedProjectsFragment"
-        android:label="Saved Projects"
-        tools:layout="@layout/fragment_saved_projects">
-        <action
-            android:id="@+id/action_savedProjects_to_projectList"
+            android:id="@+id/action_home_to_projectList"
             app:destination="@id/projectListFragment" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/templatesFragment"
-        android:name="com.synfusion.pipelistpro.ui.TemplatesFragment"
-        android:label="Templates"
-        tools:layout="@layout/fragment_templates">
-        <action
-            android:id="@+id/action_templates_to_projectList"
-            app:destination="@id/projectListFragment" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/materialSearchFragment"
-        android:name="com.synfusion.pipelistpro.ui.MaterialSearchFragment"
-        android:label="Material Search"
-        tools:layout="@layout/fragment_material_search">
-        <action
-            android:id="@+id/action_materialSearch_to_addMaterial"
-            app:destination="@id/addMaterialFragment" />
     </fragment>
 
     <fragment
@@ -86,9 +34,7 @@
         tools:layout="@layout/fragment_add_material">
         <action
             android:id="@+id/action_addMaterial_to_projectList"
-            app:destination="@id/projectListFragment"
-            app:popUpTo="@id/materialSearchFragment"
-            app:popUpToInclusive="true" />
+            app:destination="@id/projectListFragment" />
     </fragment>
 
     <fragment
@@ -97,8 +43,8 @@
         android:label="Project List"
         tools:layout="@layout/fragment_project_list">
         <action
-            android:id="@+id/action_projectList_to_materialSearch"
-            app:destination="@id/materialSearchFragment" />
+            android:id="@+id/action_projectList_to_addMaterial"
+            app:destination="@id/addMaterialFragment" />
     </fragment>
 
     <fragment

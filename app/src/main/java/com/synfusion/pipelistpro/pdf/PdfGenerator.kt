@@ -26,35 +26,50 @@ object PdfGenerator {
 
         drawHeader(canvas, project, paint)
 
-        var y = 175f // Start after header
+        var y = 130f // Start after header
 
-        drawTableHeader(canvas, y, paint)
-        y += 25f
+        // Group items by category
+        val groupedItems = project.items.groupBy { it.category }
 
-        project.items.forEach { item ->
-            // Check if we need a new page
-            val requiredHeight = if (item.notes.isNotEmpty()) 35f else 20f
-            if (y + requiredHeight > CONTENT_BOTTOM_LIMIT) {
+        var index = 1
+
+        groupedItems.forEach { (category, items) ->
+            // Draw Category Header
+            if (y + 40f > CONTENT_BOTTOM_LIMIT) {
+                drawFooter(canvas, paint)
                 pdfDocument.finishPage(page)
                 pageCount++
                 page = startNewPage(pdfDocument, pageCount)
                 canvas = page.canvas
                 y = MARGIN + 20f
-                drawTableHeader(canvas, y, paint)
+            }
+
+            y += 10f
+            paint.textSize = 16f
+            paint.isFakeBoldText = true
+            paint.color = Color.BLACK
+            canvas.drawText("$category Material List", MARGIN, y, paint)
+            y += 25f
+
+            items.forEach { item ->
+                // Check if we need a new page for item
+                val requiredHeight = if (item.notes.isNotEmpty()) 35f else 20f
+                if (y + requiredHeight > CONTENT_BOTTOM_LIMIT) {
+                    drawFooter(canvas, paint)
+                    pdfDocument.finishPage(page)
+                    pageCount++
+                    page = startNewPage(pdfDocument, pageCount)
+                    canvas = page.canvas
+                    y = MARGIN + 20f
+                }
+
+                drawItemRow(canvas, item, index, y, paint)
+                index++
                 y += 25f
             }
 
-            drawItemRow(canvas, item, y, paint)
-            y += 20f
-
-            if (item.notes.isNotEmpty()) {
-                paint.textSize = 10f
-                paint.color = Color.GRAY
-                canvas.drawText("Note: ${item.notes}", MARGIN + 10f, y, paint)
-                y += 15f
-                paint.textSize = 14f
-                paint.color = Color.BLACK
-            }
+            // Add a little space after each category
+            y += 15f
         }
 
         drawFooter(canvas, paint)
@@ -80,60 +95,45 @@ object PdfGenerator {
     }
 
     private fun drawHeader(canvas: Canvas, project: Project, paint: Paint) {
-        var y = 50f
-        paint.textSize = 24f
+        var y = 60f
+        paint.textSize = 22f
         paint.isFakeBoldText = true
-        paint.color = Color.parseColor("#004AAD")
-        canvas.drawText("PipeList Pro", MARGIN, y, paint)
-
-        y += 40f
-        paint.textSize = 18f
         paint.color = Color.BLACK
-        canvas.drawText("Material List: ${project.projectName}", MARGIN, y, paint)
+        canvas.drawText(project.projectName, MARGIN, y, paint)
 
         y += 25f
         paint.textSize = 14f
         paint.isFakeBoldText = false
-        canvas.drawText("Client: ${project.clientName}", MARGIN, y, paint)
-
-        y += 20f
-        canvas.drawText("Location: ${project.location}", MARGIN, y, paint)
-
-        y += 20f
         canvas.drawText("Date: ${project.date}", MARGIN, y, paint)
 
         y += 20f
-        paint.strokeWidth = 2f
+        paint.strokeWidth = 1f
+        paint.color = Color.LTGRAY
         canvas.drawLine(MARGIN, y, PAGE_WIDTH - MARGIN, y, paint)
     }
 
-    private fun drawTableHeader(canvas: Canvas, y: Float, paint: Paint) {
-        paint.textSize = 14f
-        paint.isFakeBoldText = true
-        paint.color = Color.BLACK
-        canvas.drawText("Item Name", MARGIN, y, paint)
-        canvas.drawText("Size", 300f, y, paint)
-        canvas.drawText("Qty", 450f, y, paint)
-        canvas.drawText("Unit", 500f, y, paint)
-
-        val lineY = y + 5f
-        paint.strokeWidth = 1f
-        canvas.drawLine(MARGIN, lineY, PAGE_WIDTH - MARGIN, lineY, paint)
-    }
-
-    private fun drawItemRow(canvas: Canvas, item: com.synfusion.pipelistpro.model.ProjectItem, y: Float, paint: Paint) {
+    private fun drawItemRow(canvas: Canvas, item: com.synfusion.pipelistpro.model.ProjectItem, index: Int, y: Float, paint: Paint) {
         paint.isFakeBoldText = false
-        paint.textSize = 12f
-        canvas.drawText(item.materialName, MARGIN, y, paint)
-        canvas.drawText(item.size, 300f, y, paint)
-        canvas.drawText(item.quantity.toString(), 450f, y, paint)
-        canvas.drawText(item.unit, 500f, y, paint)
+        paint.textSize = 14f
+        paint.color = Color.BLACK
+
+        // Format: 1. 1" UPVC Ball Valve — 2 pcs
+        val sizePrefix = if (item.size != "Standard" && item.size.isNotEmpty()) "${item.size} " else ""
+        val itemText = "$index. $sizePrefix${item.materialName} — ${item.quantity} ${item.unit}"
+        canvas.drawText(itemText, MARGIN, y, paint)
     }
 
     private fun drawFooter(canvas: Canvas, paint: Paint) {
+        val footerText = "Generated by PipeList Pro"
         paint.textSize = 10f
         paint.isFakeBoldText = false
         paint.color = Color.LTGRAY
-        canvas.drawText("Generated by PipeList Pro", MARGIN, PAGE_HEIGHT - 30f, paint)
+        paint.textAlign = Paint.Align.CENTER
+
+        // Draw centered at the bottom
+        canvas.drawText(footerText, PAGE_WIDTH / 2f, PAGE_HEIGHT - 30f, paint)
+
+        // Reset alignment for other drawing operations
+        paint.textAlign = Paint.Align.LEFT
     }
 }
