@@ -10,7 +10,8 @@ import com.synfusion.pipelistpro.model.Project
 import com.synfusion.pipelistpro.model.ProjectItem
 import com.synfusion.pipelistpro.storage.ProjectStorage
 import com.synfusion.pipelistpro.utils.SearchUtils
-import java.util.UUID
+import java.text.SimpleDateFormat
+import java.util.*
 
 class ProjectViewModel(application: Application) : AndroidViewModel(application) {
     private val storage = ProjectStorage(application)
@@ -76,6 +77,20 @@ class ProjectViewModel(application: Application) : AndroidViewModel(application)
             storage.saveProjects(projects)
             loadSavedProjects()
         }
+    }
+
+    fun duplicateProject(project: Project) {
+        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        val newProject = project.copy(
+            id = UUID.randomUUID().toString(),
+            projectName = "${project.projectName} (Copy)",
+            date = sdf.format(Date()),
+            items = project.items.toMutableList()
+        )
+        val projects = storage.getProjects().toMutableList()
+        projects.add(0, newProject)
+        storage.saveProjects(projects)
+        loadSavedProjects()
     }
 
     fun deleteProject(projectId: String) {

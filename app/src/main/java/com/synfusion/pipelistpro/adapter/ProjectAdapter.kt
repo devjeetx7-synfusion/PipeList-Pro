@@ -9,6 +9,7 @@ import com.synfusion.pipelistpro.model.Project
 class ProjectAdapter(
     private var projects: List<Project>,
     private val onProjectClick: (Project) -> Unit,
+    private val onDuplicateClick: (Project) -> Unit,
     private val onDeleteClick: (Project) -> Unit
 ) : RecyclerView.Adapter<ProjectAdapter.ViewHolder>() {
 
@@ -28,6 +29,7 @@ class ProjectAdapter(
             tvItemCount.text = "${project.items.size} Items"
 
             root.setOnClickListener { onProjectClick(project) }
+            btnDuplicate.setOnClickListener { onDuplicateClick(project) }
             btnDeleteProject.setOnClickListener { onDeleteClick(project) }
         }
     }

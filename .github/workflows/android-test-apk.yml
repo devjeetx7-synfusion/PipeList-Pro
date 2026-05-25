@@ -1,0 +1,49 @@
+name: Android Test APK Build
+
+on:
+  push:
+    branches: [ "main", "feature/**" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Make gradlew executable
+      run: chmod +x gradlew
+
+    - name: Generate test keystore if missing
+      run: |
+        if [ ! -f app/keystore/test-debug.jks ]; then
+          mkdir -p app/keystore
+          keytool -genkeypair \
+            -v \
+            -keystore app/keystore/test-debug.jks \
+            -storepass android \
+            -alias testdebug \
+            -keypass android \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -dname "CN=PipeList Pro Test,O=Synfusion,C=IN"
+        fi
+
+    - name: Build Debug APK
+      run: ./gradlew clean assembleDebug
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: PipeList-Pro-Test-Build-${{ github.run_number }}
+        path: app/build/outputs/apk/debug/app-debug.apk
