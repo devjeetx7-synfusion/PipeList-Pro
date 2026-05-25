@@ -3,15 +3,15 @@ package com.synfusion.pipelistpro.ui.components
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Timeline
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,50 +20,72 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import com.synfusion.pipelistpro.ui.theme.SlateGraySubtitle
 
 sealed class NavItem(val route: String, val icon: ImageVector, val label: String) {
     object Home : NavItem("home", Icons.Default.Home, "Home")
-    object Material : NavItem("material", Icons.AutoMirrored.Filled.List, "Add")
-    object Statistics : NavItem("statistics", Icons.Default.Timeline, "Stats")
+    object ProjectList : NavItem("project_list", Icons.Default.History, "Saved")
     object Settings : NavItem("settings", Icons.Default.Settings, "Settings")
 }
 
 @Composable
 fun ModernBottomNavigation(
     currentRoute: String?,
-    onNavigate: (String) -> Unit
+    onNavigate: (String) -> Unit,
+    onAddClick: () -> Unit = {}
 ) {
     val items = listOf(
         NavItem.Home,
-        NavItem.Material,
-        NavItem.Statistics,
+        NavItem.ProjectList,
+        null, // Placeholder for Add button
         NavItem.Settings
     )
 
-    Surface(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 20.dp)
-            .height(72.dp),
-        color = MaterialTheme.colorScheme.surface,
-        shape = RoundedCornerShape(36.dp),
-        shadowElevation = 8.dp
+            .padding(horizontal = 24.dp, vertical = 24.dp),
+        contentAlignment = Alignment.BottomCenter
     ) {
-        Row(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(64.dp),
+            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+            shape = RoundedCornerShape(32.dp),
+            shadowElevation = 12.dp,
+            tonalElevation = 8.dp
         ) {
-            items.forEach { item ->
-                val isSelected = currentRoute == item.route
-
-                ModernNavItem(
-                    item = item,
-                    isSelected = isSelected,
-                    onClick = { onNavigate(item.route) }
-                )
+            Row(
+                modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                items.forEach { item ->
+                    if (item == null) {
+                        Spacer(modifier = Modifier.size(56.dp))
+                    } else {
+                        ModernNavItem(
+                            item = item,
+                            isSelected = currentRoute == item.route,
+                            onClick = { onNavigate(item.route) }
+                        )
+                    }
+                }
             }
+        }
+
+        // Floating Action Button in the center
+        FloatingActionButton(
+            onClick = onAddClick,
+            shape = CircleShape,
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = Color.White,
+            modifier = Modifier
+                .size(56.dp)
+                .offset(y = (-32).dp),
+            elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 8.dp)
+        ) {
+            Icon(Icons.Default.Add, contentDescription = "Add Material", modifier = Modifier.size(28.dp))
         }
     }
 }
@@ -74,41 +96,38 @@ private fun ModernNavItem(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val backgroundColor by animateColorAsState(
-        targetValue = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
-        label = "bg_color"
-    )
     val contentColor by animateColorAsState(
-        targetValue = if (isSelected) MaterialTheme.colorScheme.primary else SlateGraySubtitle,
+        targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
         label = "content_color"
     )
 
-    Box(
+    Column(
         modifier = Modifier
-            .clip(RoundedCornerShape(24.dp))
-            .background(backgroundColor)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                imageVector = item.icon,
-                contentDescription = item.label,
-                tint = contentColor,
-                modifier = Modifier.size(24.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .clickable(
+                onClick = onClick,
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
             )
-            if (isSelected) {
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = item.label,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = contentColor
-                )
-            }
+            .padding(8.dp)
+            .width(64.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector = item.icon,
+            contentDescription = item.label,
+            tint = contentColor,
+            modifier = Modifier.size(24.dp)
+        )
+        if (isSelected) {
+            Box(
+                modifier = Modifier
+                    .padding(top = 2.dp)
+                    .size(4.dp)
+                    .clip(CircleShape)
+                    .background(contentColor)
+            )
         }
     }
 }

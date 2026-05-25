@@ -1,10 +1,12 @@
 package com.synfusion.pipelistpro.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -13,6 +15,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -24,13 +27,14 @@ import com.synfusion.pipelistpro.ui.theme.PipeListProTheme
 @Composable
 fun ProjectListScreen(viewModel: com.synfusion.pipelistpro.viewmodel.ProjectViewModel, navController: NavController) {
     val currentProject by viewModel.currentProject.observeAsState()
+    val view = LocalView.current
 
     Scaffold(
         floatingActionButton = {
             val context = LocalContext.current
             if (currentProject != null && currentProject!!.items.isNotEmpty()) {
                 Row(
-                    modifier = Modifier.padding(bottom = 80.dp),
+                    modifier = Modifier.padding(bottom = 100.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     FloatingActionButton(
@@ -45,20 +49,20 @@ fun ProjectListScreen(viewModel: com.synfusion.pipelistpro.viewmodel.ProjectView
                         contentColor = MaterialTheme.colorScheme.onSecondary,
                         shape = CircleShape
                     ) {
-                        Icon(Icons.Default.Share, contentDescription = "Share PDF")
+                        Icon(Icons.Default.PictureAsPdf, contentDescription = "Share PDF")
                     }
 
                     FloatingActionButton(
                         onClick = {
                             currentProject?.let { project ->
-                                com.synfusion.pipelistpro.utils.ShareUtils.shareProjectAsText(context, project)
+                                com.synfusion.pipelistpro.utils.ShareUtils.shareProjectAsImage(context, project, view)
                             }
                         },
                         containerColor = MaterialTheme.colorScheme.tertiary,
                         contentColor = MaterialTheme.colorScheme.onTertiary,
                         shape = CircleShape
                     ) {
-                        Icon(Icons.Default.ContentCopy, contentDescription = "Copy List")
+                        Icon(Icons.Default.Image, contentDescription = "Share Image")
                     }
 
                     ExtendedFloatingActionButton(
@@ -77,11 +81,12 @@ fun ProjectListScreen(viewModel: com.synfusion.pipelistpro.viewmodel.ProjectView
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .background(MaterialTheme.colorScheme.background)
         ) {
             AppTopHeader(
-                title = currentProject?.projectName ?: "New Project",
-                subtitle = currentProject?.date ?: "Project Items",
-                navigationIcon = Icons.Default.ArrowBack,
+                title = currentProject?.projectName ?: "New List",
+                subtitle = currentProject?.date ?: "Items",
+                navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
                 onNavigationClick = { navController.popBackStack() }
             )
 
@@ -93,7 +98,7 @@ fun ProjectListScreen(viewModel: com.synfusion.pipelistpro.viewmodel.ProjectView
                 PrimarySoftButton(
                     text = "Add Materials",
                     onClick = { navController.navigate("material") },
-                    modifier = Modifier.padding(20.dp)
+                    modifier = Modifier.padding(24.dp)
                 )
             } else {
                 val groupedItems = currentProject!!.items.groupBy { it.category }
@@ -102,64 +107,59 @@ fun ProjectListScreen(viewModel: com.synfusion.pipelistpro.viewmodel.ProjectView
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth(),
-                    contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 100.dp)
+                    contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 120.dp)
                 ) {
                     groupedItems.forEach { (category, items) ->
                         item {
-                            SectionTitle(title = category)
+                            SectionTitle(title = category, modifier = Modifier.padding(vertical = 12.dp))
                         }
                         items(items) { item ->
                             MaterialItemCard(
                                 name = item.materialName,
                                 category = item.category,
                                 size = item.size,
+                                unit = item.unit,
                                 quantity = item.quantity,
                                 onQuantityChange = { newQty ->
                                     viewModel.updateItemQuantityByItem(item, newQty)
                                 },
-                                onAddClick = { /* No-op in list view or use for something else */ },
+                                onAddClick = { /* No-op in list view */ },
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
                     }
                 }
 
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shadowElevation = 8.dp,
+                    color = MaterialTheme.colorScheme.surface
                 ) {
                     Row(
-                        modifier = Modifier.padding(16.dp),
+                        modifier = Modifier.padding(24.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "Total Items",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                        Column {
+                            Text(
+                                text = "Total Summary",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "${currentProject!!.items.size} Types of materials",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
                         Text(
                             text = currentProject!!.items.sumOf { it.quantity }.toString(),
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.ExtraBold,
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ProjectListScreenPreview() {
-    PipeListProTheme {
-        ProjectListScreen(
-            viewModel = com.synfusion.pipelistpro.viewmodel.ProjectViewModel(android.app.Application()),
-            navController = rememberNavController()
-        )
     }
 }

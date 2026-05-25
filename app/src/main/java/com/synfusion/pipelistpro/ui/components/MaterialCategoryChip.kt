@@ -19,15 +19,15 @@ fun MaterialCategoryChip(
 ) {
     Surface(
         modifier = modifier
-            .padding(end = 8.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(16.dp))
             .clickable(onClick = onClick),
         color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
-        shape = RoundedCornerShape(12.dp),
-        shadowElevation = if (isSelected) 0.dp else 1.dp
+        shape = RoundedCornerShape(16.dp),
+        shadowElevation = if (isSelected) 4.dp else 1.dp,
+        tonalElevation = if (isSelected) 4.dp else 0.dp
     ) {
         Box(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
