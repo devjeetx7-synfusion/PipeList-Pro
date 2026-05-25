@@ -1,6 +1,7 @@
 package com.synfusion.pipelistpro.viewmodel
 
 import android.app.Application
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -24,6 +25,10 @@ class ProjectViewModel(application: Application) : AndroidViewModel(application)
 
     private val _searchResults = MutableLiveData<List<MaterialItem>>()
     val searchResults: LiveData<List<MaterialItem>> = _searchResults
+
+    val materialStates = mutableStateMapOf<String, MaterialState>()
+
+    data class MaterialState(val size: String, val quantity: Int)
 
     init {
         loadSavedProjects()
@@ -161,5 +166,19 @@ class ProjectViewModel(application: Application) : AndroidViewModel(application)
             project.items.addAll(templateItems)
             _currentProject.value = project
         }
+    }
+
+    fun getMaterialState(materialId: String, defaultSize: String): MaterialState {
+        return materialStates.getOrPut(materialId) { MaterialState(defaultSize, 1) }
+    }
+
+    fun updateMaterialSize(materialId: String, newSize: String) {
+        val currentState = materialStates[materialId] ?: MaterialState(newSize, 1)
+        materialStates[materialId] = currentState.copy(size = newSize)
+    }
+
+    fun updateMaterialQuantity(materialId: String, newQuantity: Int) {
+        val currentState = materialStates[materialId] ?: MaterialState("", newQuantity)
+        materialStates[materialId] = currentState.copy(quantity = newQuantity)
     }
 }
