@@ -1,6 +1,7 @@
 package com.synfusion.pipelistpro.viewmodel
 
 import android.app.Application
+import android.content.Context
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
@@ -11,11 +12,14 @@ import com.synfusion.pipelistpro.model.Project
 import com.synfusion.pipelistpro.model.ProjectItem
 import com.synfusion.pipelistpro.storage.ProjectStorage
 import com.synfusion.pipelistpro.utils.SearchUtils
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import java.text.SimpleDateFormat
 import java.util.*
 
 class ProjectViewModel(application: Application) : AndroidViewModel(application) {
     private val storage = ProjectStorage(application)
+    private val prefs = application.getSharedPreferences("pipelist_prefs", Context.MODE_PRIVATE)
 
     private val _savedProjects = MutableLiveData<List<Project>>()
     val savedProjects: LiveData<List<Project>> = _savedProjects
@@ -26,6 +30,9 @@ class ProjectViewModel(application: Application) : AndroidViewModel(application)
     private val _searchResults = MutableLiveData<List<MaterialItem>>()
     val searchResults: LiveData<List<MaterialItem>> = _searchResults
 
+    private val _isDarkMode = MutableStateFlow(prefs.getBoolean("dark_mode", false))
+    val isDarkMode: StateFlow<Boolean> = _isDarkMode
+
     val materialStates = mutableStateMapOf<String, MaterialState>()
 
     data class MaterialState(val size: String, val quantity: Int)
@@ -33,6 +40,11 @@ class ProjectViewModel(application: Application) : AndroidViewModel(application)
     init {
         loadSavedProjects()
         _searchResults.value = MaterialCatalog.materials
+    }
+
+    fun toggleDarkMode(enabled: Boolean) {
+        _isDarkMode.value = enabled
+        prefs.edit().putBoolean("dark_mode", enabled).apply()
     }
 
     fun loadSavedProjects() {
