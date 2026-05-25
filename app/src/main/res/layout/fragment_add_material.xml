@@ -13,31 +13,39 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/primary"
+            android:background="@drawable/bg_gradient_header"
             android:orientation="vertical"
             android:padding="16dp">
 
-            <com.google.android.material.textfield.TextInputLayout
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Search Materials"
-                app:startIconDrawable="@drawable/ic_search"
-                app:boxBackgroundColor="@color/white"
-                app:boxCornerRadiusTopStart="12dp"
-                app:boxCornerRadiusTopEnd="12dp"
-                app:boxCornerRadiusBottomStart="12dp"
-                app:boxCornerRadiusBottomEnd="12dp"
-                app:hintTextColor="@color/text_secondary">
+                android:text="PipeList Pro"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:layout_marginBottom="16dp"/>
 
-                <com.google.android.material.textfield.TextInputEditText
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_search_bar"
+                android:padding="4dp">
+
+                <EditText
                     android:id="@+id/etSearch"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="48dp"
+                    android:background="@null"
+                    android:hint="Search Materials"
+                    android:textColorHint="@color/text_secondary"
                     android:textColor="@color/text_primary"
+                    android:paddingHorizontal="16dp"
+                    android:drawableStart="@drawable/ic_search"
+                    android:drawablePadding="8dp"
                     android:maxLines="1"
                     android:singleLine="true"/>
-            </com.google.android.material.textfield.TextInputLayout>
+            </FrameLayout>
 
             <LinearLayout
                 android:id="@+id/layoutSummary"

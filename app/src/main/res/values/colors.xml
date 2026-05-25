@@ -11,4 +11,8 @@
     <color name="divider">#E5E7EB</color>
     <color name="error">#DC2626</color>
     <color name="success">#16A34A</color>
+
+    <color name="gradient_start">#2563EB</color>
+    <color name="gradient_end">#7C3AED</color>
+    <color name="search_bg">#EEF2F6</color>
 </resources>
