@@ -30,8 +30,6 @@ class ProjectListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.toolbar.setNavigationOnClickListener { findNavController().navigateUp() }
-
         adapter = ProjectItemAdapter(
             items = emptyList(),
             onIncreaseQty = { item, newQty ->
@@ -64,6 +62,12 @@ class ProjectListFragment : Fragment() {
         binding.fabAdd.setOnClickListener {
             findNavController().navigate(R.id.action_projectList_to_addMaterial)
         }
+
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object : androidx.activity.OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                findNavController().popBackStack(R.id.homeFragment, false)
+            }
+        })
 
         binding.btnSave.setOnClickListener {
             viewModel.saveCurrentProject()

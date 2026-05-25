@@ -24,7 +24,9 @@
         tools:layout="@layout/fragment_home">
         <action
             android:id="@+id/action_home_to_projectList"
-            app:destination="@id/projectListFragment" />
+            app:destination="@id/projectListFragment"
+            app:popUpTo="@id/homeFragment"
+            app:popUpToInclusive="false" />
     </fragment>
 
     <fragment
@@ -34,7 +36,9 @@
         tools:layout="@layout/fragment_add_material">
         <action
             android:id="@+id/action_addMaterial_to_projectList"
-            app:destination="@id/projectListFragment" />
+            app:destination="@id/projectListFragment"
+            app:popUpTo="@id/homeFragment"
+            app:popUpToInclusive="false" />
     </fragment>
 
     <fragment
@@ -44,7 +48,9 @@
         tools:layout="@layout/fragment_project_list">
         <action
             android:id="@+id/action_projectList_to_addMaterial"
-            app:destination="@id/addMaterialFragment" />
+            app:destination="@id/addMaterialFragment"
+            app:popUpTo="@id/homeFragment"
+            app:popUpToInclusive="false" />
     </fragment>
 
     <fragment
