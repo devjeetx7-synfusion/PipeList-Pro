@@ -5,9 +5,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -25,9 +27,86 @@ import com.synfusion.pipelistpro.ui.components.*
 import com.synfusion.pipelistpro.ui.theme.PipeListProTheme
 
 @Composable
+fun ProjectItemRow(
+    item: com.synfusion.pipelistpro.model.ProjectItem,
+    onQuantityChange: (Int) -> Unit,
+    onRemove: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp),
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = item.materialName,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "${item.size} • ${item.category}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .background(
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        RoundedCornerShape(8.dp)
+                    )
+            ) {
+                IconButton(
+                    onClick = { onQuantityChange(item.quantity - 1) },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        if (item.quantity > 1) Icons.Default.Remove else Icons.Default.Delete,
+                        contentDescription = null,
+                        tint = if (item.quantity > 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                Text(
+                    text = item.quantity.toString(),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 4.dp)
+                )
+                IconButton(
+                    onClick = { onQuantityChange(item.quantity + 1) },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                }
+            }
+
+            Text(
+                text = item.unit,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 8.dp).width(24.dp)
+            )
+        }
+    }
+}
+
+@Composable
 fun ProjectListScreen(viewModel: com.synfusion.pipelistpro.viewmodel.ProjectViewModel, navController: NavController) {
     val currentProject by viewModel.currentProject.observeAsState()
-    val view = LocalView.current
 
     Scaffold(
         floatingActionButton = {
@@ -55,7 +134,7 @@ fun ProjectListScreen(viewModel: com.synfusion.pipelistpro.viewmodel.ProjectView
                     FloatingActionButton(
                         onClick = {
                             currentProject?.let { project ->
-                                com.synfusion.pipelistpro.utils.ShareUtils.shareProjectAsImage(context, project, view)
+                                com.synfusion.pipelistpro.utils.ShareUtils.shareProjectAsImage(context, project)
                             }
                         },
                         containerColor = MaterialTheme.colorScheme.tertiary,
@@ -114,17 +193,14 @@ fun ProjectListScreen(viewModel: com.synfusion.pipelistpro.viewmodel.ProjectView
                             SectionTitle(title = category, modifier = Modifier.padding(vertical = 12.dp))
                         }
                         items(items) { item ->
-                            MaterialItemCard(
-                                name = item.materialName,
-                                category = item.category,
-                                size = item.size,
-                                unit = item.unit,
-                                quantity = item.quantity,
+                            ProjectItemRow(
+                                item = item,
                                 onQuantityChange = { newQty ->
                                     viewModel.updateItemQuantityByItem(item, newQty)
                                 },
-                                onAddClick = { /* No-op in list view */ },
-                                modifier = Modifier.fillMaxWidth()
+                                onRemove = {
+                                    viewModel.removeItemByItem(item)
+                                }
                             )
                         }
                     }

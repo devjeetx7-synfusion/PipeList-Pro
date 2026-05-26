@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.dp
 
 sealed class NavItem(val route: String, val icon: ImageVector, val label: String) {
     object Home : NavItem("home", Icons.Default.Home, "Home")
-    object ProjectList : NavItem("project_list", Icons.Default.History, "Saved")
     object Settings : NavItem("settings", Icons.Default.Settings, "Settings")
 }
 
@@ -35,7 +34,6 @@ fun ModernBottomNavigation(
 ) {
     val items = listOf(
         NavItem.Home,
-        NavItem.ProjectList,
         null, // Placeholder for Add button
         NavItem.Settings
     )
@@ -43,26 +41,28 @@ fun ModernBottomNavigation(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 24.dp),
+            .navigationBarsPadding()
+            .padding(horizontal = 48.dp, vertical = 16.dp),
         contentAlignment = Alignment.BottomCenter
     ) {
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(64.dp),
-            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
             shape = RoundedCornerShape(32.dp),
-            shadowElevation = 12.dp,
-            tonalElevation = 8.dp
+            shadowElevation = 8.dp,
+            tonalElevation = 4.dp
         ) {
             Row(
-                modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
+                modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 items.forEach { item ->
                     if (item == null) {
-                        Spacer(modifier = Modifier.size(56.dp))
+                        // Centered FAB Placeholder
+                        Box(modifier = Modifier.size(64.dp))
                     } else {
                         ModernNavItem(
                             item = item,
@@ -74,7 +74,7 @@ fun ModernBottomNavigation(
             }
         }
 
-        // Floating Action Button in the center
+        // Floating Action Button in the center - perfectly aligned over the gap
         FloatingActionButton(
             onClick = onAddClick,
             shape = CircleShape,
@@ -83,9 +83,16 @@ fun ModernBottomNavigation(
             modifier = Modifier
                 .size(56.dp)
                 .offset(y = (-32).dp),
-            elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 8.dp)
+            elevation = FloatingActionButtonDefaults.elevation(
+                defaultElevation = 8.dp,
+                pressedElevation = 12.dp
+            )
         ) {
-            Icon(Icons.Default.Add, contentDescription = "Add Material", modifier = Modifier.size(28.dp))
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Add Material",
+                modifier = Modifier.size(28.dp)
+            )
         }
     }
 }

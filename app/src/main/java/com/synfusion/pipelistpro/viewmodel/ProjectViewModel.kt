@@ -67,20 +67,20 @@ class ProjectViewModel(application: Application) : AndroidViewModel(application)
 
     fun updateItemQuantityByItem(targetItem: ProjectItem, newQuantity: Int) {
         _currentProject.value?.let { project ->
-            val index = project.items.indexOfFirst { it === targetItem || (it.materialName == targetItem.materialName && it.size == targetItem.size) }
+            val index = project.items.indexOfFirst {
+                it === targetItem || (
+                    it.materialName == targetItem.materialName &&
+                    it.size == targetItem.size &&
+                    it.category == targetItem.category &&
+                    it.unit == targetItem.unit
+                )
+            }
             if (index != -1 && newQuantity > 0) {
                 val item = project.items[index]
-                val updatedItem = ProjectItem(
-                    materialName = item.materialName,
-                    category = item.category,
-                    size = item.size,
-                    quantity = newQuantity,
-                    unit = item.unit,
-                    notes = item.notes
-                )
+                val updatedItem = item.copy(quantity = newQuantity)
                 project.items[index] = updatedItem
                 _currentProject.value = project
-            } else if (index != -1 && newQuantity == 0) {
+            } else if (index != -1 && newQuantity <= 0) {
                 removeItemByItem(targetItem)
             }
         }
@@ -112,14 +112,35 @@ class ProjectViewModel(application: Application) : AndroidViewModel(application)
 
     fun addItemToCurrentProject(item: ProjectItem) {
         _currentProject.value?.let { project ->
-            project.items.add(item)
+            val existingIndex = project.items.indexOfFirst {
+                it.category == item.category &&
+                it.materialName == item.materialName &&
+                it.size == item.size &&
+                it.unit == item.unit
+            }
+
+            if (existingIndex != -1) {
+                val existingItem = project.items[existingIndex]
+                project.items[existingIndex] = existingItem.copy(
+                    quantity = existingItem.quantity + item.quantity
+                )
+            } else {
+                project.items.add(item)
+            }
             _currentProject.value = project // Trigger update
         }
     }
 
     fun removeItemByItem(targetItem: ProjectItem) {
         _currentProject.value?.let { project ->
-            val index = project.items.indexOfFirst { it === targetItem || (it.materialName == targetItem.materialName && it.size == targetItem.size) }
+            val index = project.items.indexOfFirst {
+                it === targetItem || (
+                    it.materialName == targetItem.materialName &&
+                    it.size == targetItem.size &&
+                    it.category == targetItem.category &&
+                    it.unit == targetItem.unit
+                )
+            }
             if (index != -1) {
                 project.items.removeAt(index)
                 _currentProject.value = project

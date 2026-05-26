@@ -100,14 +100,14 @@ fun AppNavigation(navController: NavHostController, viewModel: ProjectViewModel)
         composable("home") {
             MainPager(viewModel, navController, 0)
         }
-        composable("project_list") {
-            MainPager(viewModel, navController, 1)
-        }
         composable("settings") {
-            MainPager(viewModel, navController, 2)
+            MainPager(viewModel, navController, 1)
         }
         composable("material") {
             MaterialScreen(viewModel, navController)
+        }
+        composable("project_list") {
+            ProjectListScreen(viewModel, navController)
         }
     }
 }
@@ -115,12 +115,11 @@ fun AppNavigation(navController: NavHostController, viewModel: ProjectViewModel)
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MainPager(viewModel: ProjectViewModel, navController: NavHostController, initialPage: Int) {
-    val pagerState = rememberPagerState(initialPage = initialPage, pageCount = { 3 })
-    val coroutineScope = rememberCoroutineScope()
+    val pagerState = rememberPagerState(initialPage = initialPage, pageCount = { 2 })
 
     // Sync pager state with navigation
     LaunchedEffect(pagerState.currentPage) {
-        val routes = listOf("home", "project_list", "settings")
+        val routes = listOf("home", "settings")
         val targetRoute = routes[pagerState.currentPage]
         if (navController.currentDestination?.route != targetRoute) {
             navController.navigate(targetRoute) {
@@ -140,8 +139,7 @@ fun MainPager(viewModel: ProjectViewModel, navController: NavHostController, ini
     ) { page ->
         when (page) {
             0 -> HomeScreen(viewModel, navController)
-            1 -> ProjectListScreen(viewModel, navController)
-            2 -> SettingsScreen(viewModel, navController)
+            1 -> SettingsScreen(viewModel, navController)
         }
     }
 }

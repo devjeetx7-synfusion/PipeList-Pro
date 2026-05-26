@@ -18,10 +18,12 @@ import androidx.core.view.WindowCompat
 private val LightColorScheme = lightColorScheme(
     primary = PrimaryBlue,
     onPrimary = Color.White,
-    primaryContainer = SoftBlueTint,
+    primaryContainer = Color(0xFFEBF2FF),
     onPrimaryContainer = PrimaryBlue,
     secondary = SecondaryPurple,
     onSecondary = Color.White,
+    secondaryContainer = Color(0xFFF5F3FF),
+    onSecondaryContainer = SecondaryPurple,
     background = BackgroundLight,
     onBackground = NavyHeading,
     surface = CardWhite,
@@ -29,24 +31,30 @@ private val LightColorScheme = lightColorScheme(
     surfaceVariant = Color(0xFFF1F5F9),
     onSurfaceVariant = SlateGraySubtitle,
     outline = DividerColor,
-    outlineVariant = Color(0xFFF1F5F9)
+    outlineVariant = Color(0xFFF1F5F9),
+    error = ErrorRed,
+    onError = Color.White
 )
 
 private val DarkColorScheme = darkColorScheme(
-    primary = PrimaryVariant,
-    onPrimary = Color.White,
+    primary = Color(0xFF60A5FA),
+    onPrimary = Color(0xFF003366),
     primaryContainer = Color(0xFF1E293B),
-    onPrimaryContainer = Color(0xFFE2E8F0),
-    secondary = SecondaryPurple,
-    onSecondary = Color.White,
+    onPrimaryContainer = Color(0xFFD1E9FF),
+    secondary = Color(0xFFA78BFA),
+    onSecondary = Color(0xFF2E1065),
+    secondaryContainer = Color(0xFF2D1B69),
+    onSecondaryContainer = Color(0xFFEDE9FE),
     background = BackgroundDark,
     onBackground = TextWhite,
     surface = CardDark,
     onSurface = TextWhite,
     surfaceVariant = Color(0xFF334155),
     onSurfaceVariant = TextGray,
-    outline = Color(0xFF334155),
-    outlineVariant = Color(0xFF1E293B)
+    outline = Color(0xFF475569),
+    outlineVariant = Color(0xFF1E293B),
+    error = Color(0xFFF87171),
+    onError = Color(0xFF450A0A)
 )
 
 val PipeListShapes = Shapes(

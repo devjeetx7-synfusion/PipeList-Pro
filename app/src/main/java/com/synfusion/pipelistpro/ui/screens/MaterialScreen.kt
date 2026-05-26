@@ -76,7 +76,7 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                 .background(MaterialTheme.colorScheme.background)
         ) {
             // Search Bar
-            OutlinedTextField(
+            TextField(
                 value = searchQuery,
                 onValueChange = {
                     searchQuery = it
@@ -87,11 +87,14 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 placeholder = { Text("Search materials...") },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(24.dp),
                 singleLine = true,
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
                 )
             )
 
@@ -121,17 +124,27 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
 
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp)
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(filteredMaterials) { material ->
+                items(filteredMaterials, key = { it.id }) { material ->
                     val materialState = viewModel.getMaterialState(material.id, material.sizes.first())
+
+                    val itemsInCart = currentProject?.items?.filter {
+                        it.materialName == material.name && it.category == material.category
+                    } ?: emptyList()
+
+                    val totalQtyInCart = itemsInCart.sumOf { it.quantity }
 
                     MaterialItemCard(
                         name = material.name,
                         category = material.category,
                         size = materialState.size,
+                        sizes = material.sizes,
                         unit = material.unit,
                         quantity = materialState.quantity,
+                        inCartCount = totalQtyInCart,
+                        onSizeChange = { viewModel.updateMaterialSize(material.id, it) },
                         onQuantityChange = { viewModel.updateMaterialQuantity(material.id, it) },
                         onAddClick = {
                             viewModel.addItemToCurrentProject(
@@ -148,7 +161,7 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                 }
 
                 item {
-                    Spacer(modifier = Modifier.height(80.dp))
+                    Spacer(modifier = Modifier.height(100.dp))
                 }
             }
         }
