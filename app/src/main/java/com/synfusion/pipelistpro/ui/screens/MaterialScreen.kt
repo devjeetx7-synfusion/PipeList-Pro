@@ -41,6 +41,7 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
     if (showCartSheet) {
         SelectedItemsBottomSheet(
             viewModel = viewModel,
+            navController = navController,
             onDismiss = { showCartSheet = false },
             onContinue = { showCartSheet = false }
         )
@@ -160,6 +161,7 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                         onAddClick = {
                             viewModel.addItemToCurrentProject(
                                 ProjectItem(
+                                    materialId = material.id,
                                     materialName = material.name,
                                     category = material.category,
                                     size = materialState.size,
@@ -197,8 +199,9 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.ShoppingCart, contentDescription = null, tint = Color.White)
                                 Spacer(modifier = Modifier.width(12.dp))
+                                val uniqueItemCount = currentProject?.items?.size ?: 0
                                 Text(
-                                    text = "$totalItems ${if (totalItems == 1) "item" else "items"} selected",
+                                    text = "$uniqueItemCount ${if (uniqueItemCount == 1) "item" else "items"} selected",
                                     color = Color.White,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -221,6 +224,7 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
 @Composable
 fun SelectedItemsBottomSheet(
     viewModel: ProjectViewModel,
+    navController: NavController,
     onDismiss: () -> Unit,
     onContinue: () -> Unit
 ) {
@@ -294,13 +298,23 @@ fun SelectedItemsBottomSheet(
             }
 
             Button(
-                onClick = onContinue,
+                onClick = {
+                    onContinue()
+                    viewModel.saveCurrentProject()
+                    navController.navigate("project_list") {
+                        popUpTo("home")
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp),
-                shape = RoundedCornerShape(12.dp)
+                    .padding(horizontal = 24.dp, vertical = 12.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = Color.White
+                )
             ) {
-                Text("Continue to Project")
+                Text("Continue to Project", fontWeight = FontWeight.Bold)
             }
         }
     }

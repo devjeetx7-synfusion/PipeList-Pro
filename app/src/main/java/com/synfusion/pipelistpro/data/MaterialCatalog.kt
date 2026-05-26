@@ -82,12 +82,12 @@ object MaterialCatalog {
     )
 
     fun getBathroomTemplate(): List<ProjectItem> = listOf(
-        ProjectItem(materialName = "CPVC Pipe", category = "CPVC", size = "¾\"", quantity = 5, unit = "ft"),
-        ProjectItem(materialName = "CPVC Elbow 90°", category = "CPVC", size = "¾\"", quantity = 10, unit = "pcs"),
-        ProjectItem(materialName = "CPVC Tee", category = "CPVC", size = "¾\"", quantity = 5, unit = "pcs"),
-        ProjectItem(materialName = "Angle Valve", category = "Tools/Other", size = "Standard", quantity = 2, unit = "pcs"),
-        ProjectItem(materialName = "Health Faucet", category = "Tools/Other", size = "Standard", quantity = 1, unit = "pcs"),
-        ProjectItem(materialName = "Teflon Tape", category = "Tools/Other", size = "Standard", quantity = 2, unit = "pcs"),
-        ProjectItem(materialName = "CPVC Solution", category = "CPVC", size = "100ml", quantity = 1, unit = "ltr")
+        ProjectItem(materialId = "cpvc_pipe", materialName = "CPVC Pipe", category = "CPVC", size = "¾\"", quantity = 5, unit = "ft"),
+        ProjectItem(materialId = "cpvc_elbow", materialName = "CPVC Elbow 90°", category = "CPVC", size = "¾\"", quantity = 10, unit = "pcs"),
+        ProjectItem(materialId = "cpvc_tee", materialName = "CPVC Tee", category = "CPVC", size = "¾\"", quantity = 5, unit = "pcs"),
+        ProjectItem(materialId = "angle_valve", materialName = "Angle Valve", category = "Tools/Other", size = "Standard", quantity = 2, unit = "pcs"),
+        ProjectItem(materialId = "health_faucet", materialName = "Health Faucet", category = "Tools/Other", size = "Standard", quantity = 1, unit = "pcs"),
+        ProjectItem(materialId = "teflon_tape", materialName = "Teflon Tape", category = "Tools/Other", size = "Standard", quantity = 2, unit = "pcs"),
+        ProjectItem(materialId = "cpvc_solution", materialName = "CPVC Solution", category = "CPVC", size = "100ml", quantity = 1, unit = "ltr")
     )
 }
