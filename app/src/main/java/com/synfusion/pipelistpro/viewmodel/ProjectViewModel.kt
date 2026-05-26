@@ -113,16 +113,14 @@ class ProjectViewModel(application: Application) : AndroidViewModel(application)
     fun addItemToCurrentProject(item: ProjectItem) {
         _currentProject.value?.let { project ->
             val existingIndex = project.items.indexOfFirst {
-                it.category == item.category &&
-                it.materialName == item.materialName &&
-                it.size == item.size &&
-                it.unit == item.unit
+                (it.materialId.isNotEmpty() && it.materialId == item.materialId && it.size == item.size) ||
+                (it.materialId.isEmpty() && it.category == item.category && it.materialName == item.materialName && it.size == item.size)
             }
 
             if (existingIndex != -1) {
-                val existingItem = project.items[existingIndex]
-                project.items[existingIndex] = existingItem.copy(
-                    quantity = existingItem.quantity + item.quantity
+                // Replace/Update quantity as requested
+                project.items[existingIndex] = project.items[existingIndex].copy(
+                    quantity = item.quantity
                 )
             } else {
                 project.items.add(item)

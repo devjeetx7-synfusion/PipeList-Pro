@@ -42,11 +42,11 @@ fun MaterialItemCard(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
-            containerColor = if (isAdded) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f) else MaterialTheme.colorScheme.surface,
+            containerColor = MaterialTheme.colorScheme.surface,
             contentColor = MaterialTheme.colorScheme.onSurface
         ),
-        border = if (isAdded) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)) else null,
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isAdded) 4.dp else 2.dp)
+        border = if (isAdded) BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)) else BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isAdded) 2.dp else 1.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -189,7 +189,7 @@ fun MaterialItemCard(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isAdded) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary,
+                    containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = Color.White
                 )
             ) {
