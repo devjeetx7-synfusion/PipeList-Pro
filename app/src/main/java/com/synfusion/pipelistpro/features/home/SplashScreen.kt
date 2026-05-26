@@ -1,4 +1,4 @@
-package com.synfusion.pipelistpro.ui.screens
+package com.synfusion.pipelistpro.features.home
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
@@ -17,8 +17,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.synfusion.pipelistpro.ui.theme.GradientEnd
-import com.synfusion.pipelistpro.ui.theme.GradientStart
+import com.synfusion.pipelistpro.core.theme.GradientEnd
+import com.synfusion.pipelistpro.core.theme.GradientStart
 import kotlinx.coroutines.delay
 
 @Composable

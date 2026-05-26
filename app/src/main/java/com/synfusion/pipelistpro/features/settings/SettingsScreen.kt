@@ -1,4 +1,4 @@
-package com.synfusion.pipelistpro.ui.screens
+package com.synfusion.pipelistpro.features.settings
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -16,7 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.synfusion.pipelistpro.ui.components.AppTopHeader
-import com.synfusion.pipelistpro.viewmodel.ProjectViewModel
+import com.synfusion.pipelistpro.features.cart.ProjectViewModel
 
 @Composable
 fun SettingsScreen(viewModel: ProjectViewModel, navController: NavController) {
@@ -36,10 +36,6 @@ fun SettingsScreen(viewModel: ProjectViewModel, navController: NavController) {
         }
 
         item {
-            DeveloperCard()
-        }
-
-        item {
             Column(modifier = Modifier.padding(24.dp)) {
                 Text(
                     text = "App Settings",
@@ -51,7 +47,7 @@ fun SettingsScreen(viewModel: ProjectViewModel, navController: NavController) {
                 SettingsCard {
                     SettingsToggleItem(
                         icon = Icons.Default.DarkMode,
-                        title = "Dark Mode",
+                        title = "Theme",
                         checked = isDarkMode,
                         onCheckedChange = { viewModel.toggleDarkMode(it) }
                     )
@@ -68,15 +64,15 @@ fun SettingsScreen(viewModel: ProjectViewModel, navController: NavController) {
 
                 SettingsCard {
                     Column {
-                        SettingsActionItem(icon = Icons.Default.Star, title = "Rate App")
+                        SettingsActionItem(icon = Icons.Default.Share, title = "Share App")
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                        SettingsActionItem(icon = Icons.Default.PrivacyTip, title = "Privacy Policy")
+                        SettingsActionItem(icon = Icons.Default.Info, title = "About App")
                         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                        SettingsActionItem(icon = Icons.Default.Description, title = "Terms & Conditions")
-                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                        SettingsActionItem(icon = Icons.Default.Help, title = "Help & Support")
-                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
-                        SettingsActionItem(icon = Icons.Default.BugReport, title = "Report Bugs")
+                        SettingsActionItem(icon = Icons.Default.DeleteForever, title = "Clear All Data", onClick = {
+                            navController.context.getSharedPreferences("pipelist_prefs", android.content.Context.MODE_PRIVATE).edit().clear().apply()
+                            navController.context.getSharedPreferences("PipeListProPrefs", android.content.Context.MODE_PRIVATE).edit().clear().apply()
+                            viewModel.loadSavedProjects()
+                        })
                     }
                 }
 
@@ -89,37 +85,6 @@ fun SettingsScreen(viewModel: ProjectViewModel, navController: NavController) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-            }
-        }
-    }
-}
-
-@Composable
-fun DeveloperCard() {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp),
-        shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)
-    ) {
-        Row(
-            modifier = Modifier.padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Surface(
-                modifier = Modifier.size(56.dp),
-                shape = androidx.compose.foundation.shape.CircleShape,
-                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(Icons.Default.Person, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(32.dp))
-                }
-            }
-            Spacer(modifier = Modifier.width(16.dp))
-            Column {
-                Text(text = "PipeList Pro Developer", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
-                Text(text = "Crafted for professionals", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f))
             }
         }
     }

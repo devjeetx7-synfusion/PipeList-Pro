@@ -1,4 +1,4 @@
-package com.synfusion.pipelistpro.ui.screens
+package com.synfusion.pipelistpro.features.materials
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -13,24 +13,25 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.synfusion.pipelistpro.data.MaterialCatalog
-import com.synfusion.pipelistpro.model.ProjectItem
+import com.synfusion.pipelistpro.data.repository.MaterialCatalog
+import com.synfusion.pipelistpro.data.models.CartItem
 import com.synfusion.pipelistpro.ui.components.MaterialCategoryChip
 import com.synfusion.pipelistpro.ui.components.MaterialItemCard
-import com.synfusion.pipelistpro.viewmodel.ProjectViewModel
+import com.synfusion.pipelistpro.features.cart.ProjectViewModel
+import com.synfusion.pipelistpro.features.cart.CartItemRow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
-    val searchResults by viewModel.searchResults.observeAsState(emptyList())
-    val currentProject by viewModel.currentProject.observeAsState()
+    val searchResults by viewModel.searchResults.collectAsState(emptyList())
+    val currentProject by viewModel.currentProject.collectAsState()
 
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("UPVC") }
@@ -143,7 +144,7 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                     val materialState = viewModel.getMaterialState(material.id, material.sizes.first())
 
                     val itemsInCart = currentProject?.items?.filter {
-                        it.materialName == material.name && it.category == material.category
+                        it.name == material.name && it.category == material.category
                     } ?: emptyList()
 
                     val totalQtyInCart = itemsInCart.sumOf { it.quantity }
@@ -154,19 +155,22 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                         size = materialState.size,
                         sizes = material.sizes,
                         unit = material.unit,
+                        ft = materialState.ft,
                         quantity = materialState.quantity,
                         inCartCount = totalQtyInCart,
                         onSizeChange = { viewModel.updateMaterialSize(material.id, it) },
+                        onFtChange = { viewModel.updateMaterialFt(material.id, it) },
                         onQuantityChange = { viewModel.updateMaterialQuantity(material.id, it) },
                         onAddClick = {
                             viewModel.addItemToCurrentProject(
-                                ProjectItem(
+                                CartItem(
                                     materialId = material.id,
-                                    materialName = material.name,
+                                    name = material.name,
                                     category = material.category,
                                     size = materialState.size,
                                     quantity = materialState.quantity,
-                                    unit = material.unit
+                                    unit = material.unit,
+                                    ft = materialState.ft
                                 )
                             )
                         }
@@ -228,7 +232,7 @@ fun SelectedItemsBottomSheet(
     onDismiss: () -> Unit,
     onContinue: () -> Unit
 ) {
-    val currentProject by viewModel.currentProject.observeAsState()
+    val currentProject by viewModel.currentProject.collectAsState()
     val sheetState = rememberModalBottomSheetState()
 
     ModalBottomSheet(
@@ -287,9 +291,12 @@ fun SelectedItemsBottomSheet(
                             )
                         }
                         items(items) { item ->
-                            ProjectItemRow(
+                            CartItemRow(
                                 item = item,
                                 onQuantityChange = { viewModel.updateItemQuantityByItem(item, it) },
+                                onDetailsChange = { newSize, newFt, newUnit ->
+                                    viewModel.updateCartItemDetails(item, newSize, newFt, newUnit)
+                                },
                                 onRemove = { viewModel.removeItemByItem(item) }
                             )
                         }
@@ -297,24 +304,37 @@ fun SelectedItemsBottomSheet(
                 }
             }
 
-            Button(
-                onClick = {
-                    onContinue()
-                    viewModel.saveCurrentProject()
-                    navController.navigate("project_list") {
-                        popUpTo("home")
-                    }
-                },
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp, vertical = 12.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = Color.White
-                )
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text("Continue to Project", fontWeight = FontWeight.Bold)
+                OutlinedButton(
+                    onClick = onContinue,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Keep Adding", fontWeight = FontWeight.Bold)
+                }
+
+                Button(
+                    onClick = {
+                        onContinue()
+                        viewModel.saveCurrentProject()
+                        navController.navigate("project_list") {
+                            popUpTo("home")
+                        }
+                    },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text("View List", fontWeight = FontWeight.Bold)
+                }
             }
         }
     }

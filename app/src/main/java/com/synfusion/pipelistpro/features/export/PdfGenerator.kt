@@ -1,12 +1,12 @@
-package com.synfusion.pipelistpro.pdf
+package com.synfusion.pipelistpro.features.export
 
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.pdf.PdfDocument
-import com.synfusion.pipelistpro.model.Project
-import com.synfusion.pipelistpro.model.ProjectItem
+import com.synfusion.pipelistpro.data.models.Project
+import com.synfusion.pipelistpro.data.models.CartItem
 import java.io.File
 import java.io.FileOutputStream
 
@@ -117,14 +117,22 @@ object PdfGenerator {
         canvas.drawLine(MARGIN, y, PAGE_WIDTH - MARGIN, y, paint)
     }
 
-    private fun drawItemRow(canvas: Canvas, item: ProjectItem, index: Int, y: Float, paint: Paint) {
+    private fun drawItemRow(canvas: Canvas, item: CartItem, index: Int, y: Float, paint: Paint) {
         paint.textSize = 13f
         paint.isFakeBoldText = false
         paint.color = Color.BLACK
 
         val sizeStr = if (item.size != "Standard" && item.size.isNotEmpty()) "${item.size} " else ""
-        val itemText = "$index. $sizeStr${item.materialName} — ${item.quantity} ${item.unit}"
+        val ftStr = if (item.ft != null) " (${item.ft} ft) " else ""
+
+        val itemText = "$index. $sizeStr${item.name}$ftStr"
+        val quantityText = "${item.quantity} ${item.unit}"
+
         canvas.drawText(itemText, MARGIN + 10f, y, paint)
+
+        paint.textAlign = Paint.Align.RIGHT
+        canvas.drawText(quantityText, PAGE_WIDTH - MARGIN, y, paint)
+        paint.textAlign = Paint.Align.LEFT
     }
 
     private fun drawFooter(canvas: Canvas, paint: Paint) {

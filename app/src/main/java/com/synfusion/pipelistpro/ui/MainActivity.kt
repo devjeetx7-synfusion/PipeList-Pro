@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -30,15 +32,18 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.synfusion.pipelistpro.ui.components.ModernBottomNavigation
-import com.synfusion.pipelistpro.ui.screens.*
-import com.synfusion.pipelistpro.ui.theme.PipeListProTheme
-import com.synfusion.pipelistpro.viewmodel.ProjectViewModel
+import com.synfusion.pipelistpro.features.home.*
+import com.synfusion.pipelistpro.features.cart.*
+import com.synfusion.pipelistpro.features.materials.*
+import com.synfusion.pipelistpro.features.settings.*
+import com.synfusion.pipelistpro.core.theme.PipeListProTheme
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private val viewModel: ProjectViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        Thread.setDefaultUncaughtExceptionHandler(com.synfusion.pipelistpro.core.utils.GlobalCrashHandler(applicationContext))
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContent {
@@ -67,7 +72,7 @@ fun MainApp(viewModel: ProjectViewModel) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(
-                    bottom = if (currentRoute != "splash" && currentRoute != "material") 80.dp else 0.dp
+                    bottom = if (currentRoute != "splash" && currentRoute != "material") WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() else 0.dp
                 )
         ) {
             AppNavigation(navController, viewModel)

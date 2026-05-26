@@ -1,7 +1,7 @@
-package com.synfusion.pipelistpro.data
+package com.synfusion.pipelistpro.data.repository
 
-import com.synfusion.pipelistpro.model.MaterialItem
-import com.synfusion.pipelistpro.model.ProjectItem
+import com.synfusion.pipelistpro.data.models.MaterialItem
+import com.synfusion.pipelistpro.data.models.CartItem
 import java.util.UUID
 
 object MaterialCatalog {
@@ -81,13 +81,13 @@ object MaterialCatalog {
         MaterialItem("bottle_trap", "Bottle Trap", "Tools/Other", listOf("Standard"), "pcs", listOf("basin trap"))
     )
 
-    fun getBathroomTemplate(): List<ProjectItem> = listOf(
-        ProjectItem(materialId = "cpvc_pipe", materialName = "CPVC Pipe", category = "CPVC", size = "¾\"", quantity = 5, unit = "ft"),
-        ProjectItem(materialId = "cpvc_elbow", materialName = "CPVC Elbow 90°", category = "CPVC", size = "¾\"", quantity = 10, unit = "pcs"),
-        ProjectItem(materialId = "cpvc_tee", materialName = "CPVC Tee", category = "CPVC", size = "¾\"", quantity = 5, unit = "pcs"),
-        ProjectItem(materialId = "angle_valve", materialName = "Angle Valve", category = "Tools/Other", size = "Standard", quantity = 2, unit = "pcs"),
-        ProjectItem(materialId = "health_faucet", materialName = "Health Faucet", category = "Tools/Other", size = "Standard", quantity = 1, unit = "pcs"),
-        ProjectItem(materialId = "teflon_tape", materialName = "Teflon Tape", category = "Tools/Other", size = "Standard", quantity = 2, unit = "pcs"),
-        ProjectItem(materialId = "cpvc_solution", materialName = "CPVC Solution", category = "CPVC", size = "100ml", quantity = 1, unit = "ltr")
+    fun getBathroomTemplate(): List<CartItem> = listOf(
+        CartItem(materialId = "cpvc_pipe", name = "CPVC Pipe", category = "CPVC", size = "¾\"", quantity = 5, unit = "ft"),
+        CartItem(materialId = "cpvc_elbow", name = "CPVC Elbow 90°", category = "CPVC", size = "¾\"", quantity = 10, unit = "pcs"),
+        CartItem(materialId = "cpvc_tee", name = "CPVC Tee", category = "CPVC", size = "¾\"", quantity = 5, unit = "pcs"),
+        CartItem(materialId = "angle_valve", name = "Angle Valve", category = "Tools/Other", size = "Standard", quantity = 2, unit = "pcs"),
+        CartItem(materialId = "health_faucet", name = "Health Faucet", category = "Tools/Other", size = "Standard", quantity = 1, unit = "pcs"),
+        CartItem(materialId = "teflon_tape", name = "Teflon Tape", category = "Tools/Other", size = "Standard", quantity = 2, unit = "pcs"),
+        CartItem(materialId = "cpvc_solution", name = "CPVC Solution", category = "CPVC", size = "100ml", quantity = 1, unit = "ltr")
     )
 }

@@ -10,7 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.synfusion.pipelistpro.ui.theme.SlateGraySubtitle
+import com.synfusion.pipelistpro.core.theme.SlateGraySubtitle
 
 @Composable
 fun EmptyStateCard(

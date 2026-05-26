@@ -27,14 +27,17 @@ fun MaterialItemCard(
     size: String,
     sizes: List<String>,
     unit: String,
+    ft: Double? = null,
     quantity: Int,
     inCartCount: Int = 0,
     onSizeChange: (String) -> Unit = {},
+    onFtChange: (Double?) -> Unit = {},
     onQuantityChange: (Int) -> Unit,
     onAddClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showSizeDropdown by remember { mutableStateOf(false) }
+    var localFtInput by remember(ft) { mutableStateOf(ft?.toString() ?: "") }
 
     val isAdded = inCartCount > 0
 
@@ -45,8 +48,8 @@ fun MaterialItemCard(
             containerColor = MaterialTheme.colorScheme.surface,
             contentColor = MaterialTheme.colorScheme.onSurface
         ),
-        border = if (isAdded) BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)) else BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isAdded) 2.dp else 1.dp)
+        border = if (isAdded) BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)) else BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -96,46 +99,67 @@ fun MaterialItemCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 // Size Selector
-                Box {
-                    Surface(
-                        onClick = { if (sizes.size > 1) showSizeDropdown = true },
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                        border = if (sizes.size > 1) BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)) else null
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box {
+                        Surface(
+                            onClick = { if (sizes.size > 1) showSizeDropdown = true },
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            border = if (sizes.size > 1) BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)) else null
                         ) {
-                            Text(
-                                text = size,
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium
-                            )
-                            if (sizes.size > 1) {
-                                Icon(
-                                    imageVector = Icons.Default.ArrowDropDown,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(20.dp)
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = size,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                if (sizes.size > 1) {
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowDropDown,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        DropdownMenu(
+                            expanded = showSizeDropdown,
+                            onDismissRequest = { showSizeDropdown = false },
+                            modifier = Modifier.background(MaterialTheme.colorScheme.surface)
+                        ) {
+                            sizes.forEach { s ->
+                                DropdownMenuItem(
+                                    text = { Text(s) },
+                                    onClick = {
+                                        onSizeChange(s)
+                                        showSizeDropdown = false
+                                    }
                                 )
                             }
                         }
                     }
 
-                    DropdownMenu(
-                        expanded = showSizeDropdown,
-                        onDismissRequest = { showSizeDropdown = false },
-                        modifier = Modifier.background(MaterialTheme.colorScheme.surface)
-                    ) {
-                        sizes.forEach { s ->
-                            DropdownMenuItem(
-                                text = { Text(s) },
-                                onClick = {
-                                    onSizeChange(s)
-                                    showSizeDropdown = false
-                                }
-                            )
-                        }
+                    if (unit == "ft") {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        BasicTextField(
+                            value = localFtInput,
+                            onValueChange = {
+                                localFtInput = it
+                                val newFt = it.toDoubleOrNull()
+                                onFtChange(newFt)
+                            },
+                            modifier = Modifier
+                                .width(60.dp)
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                        )
+                        Text("ft", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(start = 4.dp))
                     }
                 }
 

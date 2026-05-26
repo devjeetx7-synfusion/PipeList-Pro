@@ -1,6 +1,7 @@
-package com.synfusion.pipelistpro.model
+package com.synfusion.pipelistpro.data.models
 
 import android.os.Parcelable
+import com.google.gson.annotations.SerializedName
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
@@ -14,15 +15,15 @@ data class MaterialItem(
 ) : Parcelable
 
 @Parcelize
-data class ProjectItem(
+data class CartItem(
     val id: String = java.util.UUID.randomUUID().toString(),
     val materialId: String = "",
-    val materialName: String,
     val category: String,
+    @SerializedName(value = "name", alternate = ["materialName"]) val name: String,
     val size: String,
-    val quantity: Int,
     val unit: String,
-    val notes: String = ""
+    val ft: Double? = null,
+    val quantity: Int
 ) : Parcelable
 
 @Parcelize
@@ -32,5 +33,5 @@ data class Project(
     val clientName: String,
     val location: String,
     val date: String,
-    val items: MutableList<ProjectItem> = mutableListOf()
+    val items: MutableList<CartItem> = mutableListOf()
 ) : Parcelable

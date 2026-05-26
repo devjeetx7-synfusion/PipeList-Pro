@@ -1,10 +1,10 @@
-package com.synfusion.pipelistpro.storage
+package com.synfusion.pipelistpro.data.storage
 
 import android.content.Context
 import android.content.SharedPreferences
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.synfusion.pipelistpro.model.Project
+import com.synfusion.pipelistpro.data.models.Project
 
 class ProjectStorage(context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences("PipeListProPrefs", Context.MODE_PRIVATE)
