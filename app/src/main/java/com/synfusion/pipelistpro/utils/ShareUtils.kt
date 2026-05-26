@@ -13,7 +13,7 @@ import java.io.FileOutputStream
 
 object ShareUtils {
 
-    fun shareProjectAsText(context: Context, project: Project) {
+    fun formatProjectData(project: Project): String {
         val text = StringBuilder()
         text.append("PipeList Pro Material List\n")
         text.append("Project: ${project.projectName}\n")
@@ -32,10 +32,14 @@ object ShareUtils {
 
         text.append("----------------------------\n")
         text.append("From PipeList Pro")
+        return text.toString()
+    }
 
+    fun shareProjectAsText(context: Context, project: Project) {
+        val formattedText = formatProjectData(project)
         val intent = Intent(Intent.ACTION_SEND)
         intent.type = "text/plain"
-        intent.putExtra(Intent.EXTRA_TEXT, text.toString())
+        intent.putExtra(Intent.EXTRA_TEXT, formattedText)
         context.startActivity(Intent.createChooser(intent, "Share via"))
     }
 
@@ -78,79 +82,87 @@ object ShareUtils {
 
     private fun generateProjectImage(project: Project): Bitmap {
         val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
-        val margin = 50f
-        val width = 800
+        val margin = 60f
+        val width = 1000
 
-        // Calculate dynamic height
-        var estimatedHeight = 200f // Header
         val groupedItems = project.items.groupBy { it.category }
-        groupedItems.forEach { (category, items) ->
-            estimatedHeight += 60f // Category header
-            estimatedHeight += items.size * 35f // Items
-            estimatedHeight += 20f // Spacing
-        }
-        estimatedHeight += 100f // Footer
 
-        val bitmap = Bitmap.createBitmap(width, estimatedHeight.toInt(), Bitmap.Config.ARGB_8888)
+        // Calculate dynamic height based on content
+        var yPos = 240f // Header offset
+        groupedItems.forEach { (_, items) ->
+            yPos += 80f // Category header height
+            yPos += items.size * 50f // Rows
+            yPos += 30f // Bottom padding for category
+        }
+        yPos += 120f // Final footer offset
+
+        val bitmap = Bitmap.createBitmap(width, yPos.toInt(), Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         canvas.drawColor(Color.WHITE)
 
-        var y = 70f
+        var y = 90f
 
-        // Header
-        paint.textSize = 32f
+        // Header - Professional Notes Style
+        paint.textSize = 42f
         paint.isFakeBoldText = true
         paint.color = Color.BLACK
         canvas.drawText("PipeList Pro Material List", margin, y, paint)
 
-        y += 40f
-        paint.textSize = 18f
+        y += 50f
+        paint.textSize = 22f
         paint.isFakeBoldText = false
-        paint.color = Color.GRAY
+        paint.color = Color.rgb(60, 60, 60)
         canvas.drawText("Project: ${project.projectName}", margin, y, paint)
 
-        y += 25f
+        y += 35f
         canvas.drawText("Date: ${project.date}", margin, y, paint)
 
-        y += 20f
-        paint.strokeWidth = 2f
+        y += 30f
+        paint.strokeWidth = 3f
         paint.color = Color.BLACK
         canvas.drawLine(margin, y, width - margin, y, paint)
 
-        y += 40f
+        y += 70f
 
-        // Content
+        // Content rendering
         groupedItems.forEach { (category, items) ->
-            y += 10f
-            paint.textSize = 20f
+            paint.textSize = 28f
             paint.isFakeBoldText = true
-            paint.color = Color.DKGRAY
+            paint.color = Color.rgb(40, 40, 40)
             canvas.drawText(category.uppercase(), margin, y, paint)
 
-            y += 8f
-            paint.strokeWidth = 1f
-            paint.color = Color.LTGRAY
+            y += 15f
+            paint.strokeWidth = 1.5f
+            paint.color = Color.rgb(200, 200, 200)
             canvas.drawLine(margin, y, width - margin, y, paint)
-            y += 30f
+            y += 50f
 
             items.forEachIndexed { index, item ->
-                paint.textSize = 18f
+                paint.textSize = 24f
                 paint.isFakeBoldText = false
                 paint.color = Color.BLACK
                 val sizeStr = if (item.size != "Standard" && item.size.isNotEmpty()) "${item.size} " else ""
-                val itemText = "${index + 1}. $sizeStr${item.materialName} — ${item.quantity} ${item.unit}"
-                canvas.drawText(itemText, margin + 20f, y, paint)
-                y += 35f
+                val itemText = "${index + 1}. $sizeStr${item.materialName}"
+                val quantityText = "${item.quantity} ${item.unit}"
+
+                canvas.drawText(itemText, margin + 30f, y, paint)
+
+                // Draw quantity right-aligned
+                paint.textAlign = android.graphics.Paint.Align.RIGHT
+                canvas.drawText(quantityText, width - margin - 30f, y, paint)
+                paint.textAlign = android.graphics.Paint.Align.LEFT
+
+                y += 50f
             }
-            y += 15f
+            y += 20f
         }
 
-        // Footer
-        y = estimatedHeight - 40f
-        paint.textSize = 14f
+        // Footer branding
+        y = yPos - 60f
+        paint.textSize = 18f
         paint.color = Color.GRAY
         paint.textAlign = android.graphics.Paint.Align.CENTER
-        canvas.drawText("From PipeList Pro", width / 2f, y, paint)
+        canvas.drawText("Professional materials list generated via PipeList Pro", width / 2f, y, paint)
 
         return bitmap
     }

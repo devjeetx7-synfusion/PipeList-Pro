@@ -1,5 +1,6 @@
 package com.synfusion.pipelistpro.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -35,23 +36,36 @@ fun ProjectItemRow(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp),
+            .padding(vertical = 4.dp),
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp),
+        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
     ) {
         Row(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(12.dp)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            IconButton(
+                onClick = onRemove,
+                modifier = Modifier.size(36.dp)
+            ) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "Remove",
+                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            Column(modifier = Modifier.weight(1f).padding(horizontal = 8.dp)) {
                 Text(
                     text = item.materialName,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
@@ -66,25 +80,27 @@ fun ProjectItemRow(
                 modifier = Modifier
                     .background(
                         MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                        RoundedCornerShape(8.dp)
+                        RoundedCornerShape(12.dp)
                     )
+                    .padding(2.dp)
             ) {
                 IconButton(
-                    onClick = { onQuantityChange(item.quantity - 1) },
-                    modifier = Modifier.size(32.dp)
+                    onClick = { if (item.quantity > 1) onQuantityChange(item.quantity - 1) },
+                    modifier = Modifier.size(32.dp),
+                    enabled = item.quantity > 1
                 ) {
                     Icon(
-                        if (item.quantity > 1) Icons.Default.Remove else Icons.Default.Delete,
+                        Icons.Default.Remove,
                         contentDescription = null,
-                        tint = if (item.quantity > 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                        tint = if (item.quantity > 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
                         modifier = Modifier.size(18.dp)
                     )
                 }
                 Text(
                     text = item.quantity.toString(),
                     style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 4.dp)
+                    fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier.padding(horizontal = 8.dp)
                 )
                 IconButton(
                     onClick = { onQuantityChange(item.quantity + 1) },
@@ -98,8 +114,106 @@ fun ProjectItemRow(
                 text = item.unit,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 8.dp).width(24.dp)
+                modifier = Modifier.padding(start = 8.dp).width(28.dp)
             )
+        }
+    }
+}
+
+@Composable
+fun ProjectActionBar(
+    itemCount: Int,
+    categoryCount: Int,
+    onSave: () -> Unit,
+    onPdf: () -> Unit,
+    onImage: () -> Unit,
+    onText: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 12.dp,
+        tonalElevation = 4.dp
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "$itemCount Items • $categoryCount Categories",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Button(
+                    onClick = onSave,
+                    shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(horizontal = 24.dp)
+                ) {
+                    Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Save List")
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                ActionChip(
+                    icon = Icons.Default.PictureAsPdf,
+                    label = "PDF",
+                    onClick = onPdf,
+                    modifier = Modifier.weight(1f),
+                    color = MaterialTheme.colorScheme.secondary
+                )
+                ActionChip(
+                    icon = Icons.Default.Image,
+                    label = "Image",
+                    onClick = onImage,
+                    modifier = Modifier.weight(1f),
+                    color = MaterialTheme.colorScheme.tertiary
+                )
+                ActionChip(
+                    icon = Icons.Default.Share,
+                    label = "Share",
+                    onClick = onText,
+                    modifier = Modifier.weight(1f),
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ActionChip(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    color: androidx.compose.ui.graphics.Color
+) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier.height(48.dp),
+        shape = RoundedCornerShape(12.dp),
+        color = color.copy(alpha = 0.1f),
+        border = BorderStroke(1.dp, color.copy(alpha = 0.2f))
+    ) {
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(18.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(label, color = color, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -109,50 +223,33 @@ fun ProjectListScreen(viewModel: com.synfusion.pipelistpro.viewmodel.ProjectView
     val currentProject by viewModel.currentProject.observeAsState()
 
     Scaffold(
-        floatingActionButton = {
-            val context = LocalContext.current
+        bottomBar = {
             if (currentProject != null && currentProject!!.items.isNotEmpty()) {
-                Row(
-                    modifier = Modifier.padding(bottom = 100.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    FloatingActionButton(
-                        onClick = {
-                            currentProject?.let { project ->
-                                com.synfusion.pipelistpro.pdf.PdfGenerator.generateProjectPdf(context, project)?.let { file ->
-                                    com.synfusion.pipelistpro.utils.ShareUtils.sharePdfFile(context, file)
-                                }
+                ProjectActionBar(
+                    itemCount = currentProject!!.items.size,
+                    categoryCount = currentProject!!.items.groupBy { it.category }.size,
+                    onSave = {
+                        viewModel.saveCurrentProject()
+                        navController.popBackStack()
+                    },
+                    onPdf = {
+                        currentProject?.let { project ->
+                            com.synfusion.pipelistpro.pdf.PdfGenerator.generateProjectPdf(navController.context, project)?.let { file ->
+                                com.synfusion.pipelistpro.utils.ShareUtils.sharePdfFile(navController.context, file)
                             }
-                        },
-                        containerColor = MaterialTheme.colorScheme.secondary,
-                        contentColor = MaterialTheme.colorScheme.onSecondary,
-                        shape = CircleShape
-                    ) {
-                        Icon(Icons.Default.PictureAsPdf, contentDescription = "Share PDF")
+                        }
+                    },
+                    onImage = {
+                        currentProject?.let { project ->
+                            com.synfusion.pipelistpro.utils.ShareUtils.shareProjectAsImage(navController.context, project)
+                        }
+                    },
+                    onText = {
+                        currentProject?.let { project ->
+                            com.synfusion.pipelistpro.utils.ShareUtils.shareProjectAsText(navController.context, project)
+                        }
                     }
-
-                    FloatingActionButton(
-                        onClick = {
-                            currentProject?.let { project ->
-                                com.synfusion.pipelistpro.utils.ShareUtils.shareProjectAsImage(context, project)
-                            }
-                        },
-                        containerColor = MaterialTheme.colorScheme.tertiary,
-                        contentColor = MaterialTheme.colorScheme.onTertiary,
-                        shape = CircleShape
-                    ) {
-                        Icon(Icons.Default.Image, contentDescription = "Share Image")
-                    }
-
-                    ExtendedFloatingActionButton(
-                        onClick = { viewModel.saveCurrentProject() },
-                        icon = { Icon(Icons.Default.Save, contentDescription = null) },
-                        text = { Text("Save") },
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                        shape = MaterialTheme.shapes.extraLarge
-                    )
-                }
+                )
             }
         }
     ) { paddingValues ->
@@ -186,7 +283,7 @@ fun ProjectListScreen(viewModel: com.synfusion.pipelistpro.viewmodel.ProjectView
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth(),
-                    contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 120.dp)
+                    contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 24.dp)
                 ) {
                     groupedItems.forEach { (category, items) ->
                         item {
@@ -203,36 +300,6 @@ fun ProjectListScreen(viewModel: com.synfusion.pipelistpro.viewmodel.ProjectView
                                 }
                             )
                         }
-                    }
-                }
-
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shadowElevation = 8.dp,
-                    color = MaterialTheme.colorScheme.surface
-                ) {
-                    Row(
-                        modifier = Modifier.padding(24.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text(
-                                text = "Total Summary",
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = "${currentProject!!.items.size} Types of materials",
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
-                        Text(
-                            text = currentProject!!.items.sumOf { it.quantity }.toString(),
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
                     }
                 }
             }

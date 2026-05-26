@@ -10,7 +10,9 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Scaffold
@@ -59,10 +61,25 @@ fun MainApp(viewModel: ProjectViewModel) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    Scaffold(
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        bottomBar = {
-            if (currentRoute != "splash" && currentRoute != "material") {
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Main Content Area
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(
+                    bottom = if (currentRoute != "splash" && currentRoute != "material") 80.dp else 0.dp
+                )
+        ) {
+            AppNavigation(navController, viewModel)
+        }
+
+        // Truly Floating Bottom Navigation
+        if (currentRoute != "splash" && currentRoute != "material") {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+            ) {
                 ModernBottomNavigation(
                     currentRoute = currentRoute,
                     onNavigate = { route ->
@@ -80,13 +97,6 @@ fun MainApp(viewModel: ProjectViewModel) {
                     }
                 )
             }
-        }
-    ) { innerPadding ->
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(bottom = if (currentRoute != "splash" && currentRoute != "material") innerPadding.calculateBottomPadding() else 0.dp)
-        ) {
-            AppNavigation(navController, viewModel)
         }
     }
 }

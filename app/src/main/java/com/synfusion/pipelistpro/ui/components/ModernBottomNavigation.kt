@@ -42,17 +42,17 @@ fun ModernBottomNavigation(
         modifier = Modifier
             .fillMaxWidth()
             .navigationBarsPadding()
-            .padding(horizontal = 48.dp, vertical = 16.dp),
+            .padding(horizontal = 48.dp, vertical = 24.dp),
         contentAlignment = Alignment.BottomCenter
     ) {
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(64.dp),
-            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
             shape = RoundedCornerShape(32.dp),
-            shadowElevation = 8.dp,
-            tonalElevation = 4.dp
+            shadowElevation = 16.dp,
+            tonalElevation = 8.dp
         ) {
             Row(
                 modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
