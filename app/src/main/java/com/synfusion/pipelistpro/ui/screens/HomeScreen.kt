@@ -80,7 +80,7 @@ fun HomeScreen(viewModel: ProjectViewModel, navController: NavController) {
                 )
                 QuickActionItem(
                     title = "Saved",
-                    icon = Icons.Default.History,
+                    icon = Icons.Default.Folder,
                     color = Color(0xFF7C3AED),
                     onClick = { navController.navigate("project_list") },
                     modifier = Modifier.weight(1f)
@@ -104,7 +104,7 @@ fun HomeScreen(viewModel: ProjectViewModel, navController: NavController) {
                 EmptyStateCard(message = "No material lists yet. Create your first list!")
             }
         } else {
-            items(savedProjects.take(3)) { project ->
+            items(savedProjects) { project ->
                 ProjectSummaryCard(
                     projectName = project.projectName,
                     date = project.date,

@@ -1,11 +1,13 @@
 package com.synfusion.pipelistpro.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,21 +18,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MaterialItemCard(
     name: String,
     category: String,
     size: String,
+    sizes: List<String>,
     unit: String,
     quantity: Int,
+    inCartCount: Int = 0,
+    onSizeChange: (String) -> Unit = {},
     onQuantityChange: (Int) -> Unit,
     onAddClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var showSizeDropdown by remember { mutableStateOf(false) }
+
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
+        modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface,
@@ -45,14 +51,31 @@ fun MaterialItemCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = name,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        if (inCartCount > 0) {
+                            Surface(
+                                modifier = Modifier.padding(start = 8.dp),
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text(
+                                    text = "Added: $inCartCount",
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
                     Text(
-                        text = name,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "$category • $size",
+                        text = category,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -61,60 +84,83 @@ fun MaterialItemCard(
                 CategoryBadge(category)
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Input Section
+                // Size Selector
+                Box {
+                    Surface(
+                        onClick = { if (sizes.size > 1) showSizeDropdown = true },
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        border = if (sizes.size > 1) BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)) else null
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = size,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium
+                            )
+                            if (sizes.size > 1) {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDropDown,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    DropdownMenu(
+                        expanded = showSizeDropdown,
+                        onDismissRequest = { showSizeDropdown = false },
+                        modifier = Modifier.background(MaterialTheme.colorScheme.surface)
+                    ) {
+                        sizes.forEach { s ->
+                            DropdownMenuItem(
+                                text = { Text(s) },
+                                onClick = {
+                                    onSizeChange(s)
+                                    showSizeDropdown = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                // Quantity Controls
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .background(
                             MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                            MaterialTheme.shapes.small
+                            RoundedCornerShape(12.dp)
                         )
                         .padding(horizontal = 4.dp, vertical = 2.dp)
                 ) {
                     IconButton(
-                        onClick = { if (quantity > 0) onQuantityChange(quantity - 1) },
+                        onClick = { if (quantity > 1) onQuantityChange(quantity - 1) },
                         modifier = Modifier.size(32.dp)
                     ) {
                         Icon(Icons.Default.Remove, contentDescription = "Decrease", tint = MaterialTheme.colorScheme.primary)
                     }
 
-                    if (unit == "ft") {
-                        var textValue by remember(quantity) { mutableStateOf(if (quantity == 0) "" else quantity.toString()) }
-                        BasicTextField(
-                            value = textValue,
-                            onValueChange = {
-                                textValue = it
-                                val intVal = it.toIntOrNull()
-                                if (intVal != null) {
-                                    onQuantityChange(intVal)
-                                } else if (it.isEmpty()) {
-                                    onQuantityChange(0)
-                                }
-                            },
-                            textStyle = MaterialTheme.typography.bodyLarge.copy(
-                                fontWeight = FontWeight.Bold,
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                                color = MaterialTheme.colorScheme.onSurface
-                            ),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            modifier = Modifier.width(40.dp)
-                        )
-                    } else {
-                        Text(
-                            text = quantity.toString(),
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 8.dp),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
+                    Text(
+                        text = quantity.toString(),
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
 
                     IconButton(
                         onClick = { onQuantityChange(quantity + 1) },
@@ -130,20 +176,21 @@ fun MaterialItemCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = 8.dp)
                 )
+            }
 
-                Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(12.dp))
 
-                Button(
-                    onClick = onAddClick,
-                    shape = MaterialTheme.shapes.small,
-                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = Color.White
-                    )
-                ) {
-                    Text("Add")
-                }
+            Button(
+                onClick = onAddClick,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Add to List")
             }
         }
     }
