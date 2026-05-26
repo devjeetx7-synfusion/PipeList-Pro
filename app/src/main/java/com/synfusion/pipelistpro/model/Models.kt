@@ -15,6 +15,7 @@ data class MaterialItem(
 
 @Parcelize
 data class ProjectItem(
+    val id: String = java.util.UUID.randomUUID().toString(),
     val materialName: String,
     val category: String,
     val size: String,

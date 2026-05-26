@@ -68,7 +68,7 @@ class ProjectViewModel(application: Application) : AndroidViewModel(application)
     fun updateItemQuantityByItem(targetItem: ProjectItem, newQuantity: Int) {
         _currentProject.value?.let { project ->
             val index = project.items.indexOfFirst {
-                it === targetItem || (
+                it.id == targetItem.id || (
                     it.materialName == targetItem.materialName &&
                     it.size == targetItem.size &&
                     it.category == targetItem.category &&
@@ -77,9 +77,9 @@ class ProjectViewModel(application: Application) : AndroidViewModel(application)
             }
             if (index != -1 && newQuantity > 0) {
                 val item = project.items[index]
-                val updatedItem = item.copy(quantity = newQuantity)
-                project.items[index] = updatedItem
-                _currentProject.value = project
+                project.items[index] = item.copy(quantity = newQuantity)
+                val updatedProject = project.copy(items = project.items.toMutableList())
+                _currentProject.value = updatedProject
             } else if (index != -1 && newQuantity <= 0) {
                 removeItemByItem(targetItem)
             }
@@ -127,14 +127,15 @@ class ProjectViewModel(application: Application) : AndroidViewModel(application)
             } else {
                 project.items.add(item)
             }
-            _currentProject.value = project // Trigger update
+            val updatedProject = project.copy(items = project.items.toMutableList())
+            _currentProject.value = updatedProject
         }
     }
 
     fun removeItemByItem(targetItem: ProjectItem) {
         _currentProject.value?.let { project ->
             val index = project.items.indexOfFirst {
-                it === targetItem || (
+                it.id == targetItem.id || (
                     it.materialName == targetItem.materialName &&
                     it.size == targetItem.size &&
                     it.category == targetItem.category &&
@@ -143,7 +144,8 @@ class ProjectViewModel(application: Application) : AndroidViewModel(application)
             }
             if (index != -1) {
                 project.items.removeAt(index)
-                _currentProject.value = project
+                val updatedProject = project.copy(items = project.items.toMutableList())
+                _currentProject.value = updatedProject
             }
         }
     }

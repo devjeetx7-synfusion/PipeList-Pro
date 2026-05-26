@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
@@ -33,8 +34,17 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
 
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("UPVC") }
+    var showCartSheet by remember { mutableStateOf(false) }
 
     val categories = listOf("UPVC", "CPVC", "PVC", "SWR", "GI", "HDPE", "Tools/Other")
+
+    if (showCartSheet) {
+        SelectedItemsBottomSheet(
+            viewModel = viewModel,
+            onDismiss = { showCartSheet = false },
+            onContinue = { showCartSheet = false }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -47,7 +57,7 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                 },
                 actions = {
                     Box {
-                        IconButton(onClick = { navController.navigate("project_list") }) {
+                IconButton(onClick = { showCartSheet = true }) {
                             Icon(Icons.Default.ShoppingCart, contentDescription = "Cart")
                         }
                         if ((currentProject?.items?.size ?: 0) > 0) {
@@ -122,11 +132,12 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                 searchResults
             }
 
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
+            Box(modifier = Modifier.weight(1f)) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
                 items(filteredMaterials, key = { it.id }) { material ->
                     val materialState = viewModel.getMaterialState(material.id, material.sizes.first())
 
@@ -160,9 +171,136 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                     )
                 }
 
-                item {
-                    Spacer(modifier = Modifier.height(100.dp))
+                    item {
+                        Spacer(modifier = Modifier.height(100.dp))
+                    }
                 }
+
+                // Mini Cart Bar
+                val totalItems = currentProject?.items?.size ?: 0
+                if (totalItems > 0) {
+                    Surface(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(16.dp)
+                            .fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        shadowElevation = 8.dp,
+                        onClick = { showCartSheet = true }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.ShoppingCart, contentDescription = null, tint = Color.White)
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    text = "$totalItems ${if (totalItems == 1) "item" else "items"} selected",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            Text(
+                                text = "View List",
+                                color = Color.White,
+                                fontWeight = FontWeight.ExtraBold,
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SelectedItemsBottomSheet(
+    viewModel: ProjectViewModel,
+    onDismiss: () -> Unit,
+    onContinue: () -> Unit
+) {
+    val currentProject by viewModel.currentProject.observeAsState()
+    val sheetState = rememberModalBottomSheetState()
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        dragHandle = { BottomSheetDefaults.DragHandle() },
+        containerColor = MaterialTheme.colorScheme.surface
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 32.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Selected Materials",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                IconButton(onClick = onDismiss) {
+                    Icon(Icons.Default.Close, contentDescription = "Close")
+                }
+            }
+
+            if (currentProject == null || currentProject!!.items.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("No materials added yet", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            } else {
+                val groupedItems = currentProject!!.items.groupBy { it.category }
+
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .padding(horizontal = 24.dp)
+                ) {
+                    groupedItems.forEach { (category, items) ->
+                        item {
+                            Text(
+                                text = category,
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(vertical = 12.dp)
+                            )
+                        }
+                        items(items) { item ->
+                            ProjectItemRow(
+                                item = item,
+                                onQuantityChange = { viewModel.updateItemQuantityByItem(item, it) },
+                                onRemove = { viewModel.removeItemByItem(item) }
+                            )
+                        }
+                    }
+                }
+            }
+
+            Button(
+                onClick = onContinue,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Continue to Project")
             }
         }
     }
