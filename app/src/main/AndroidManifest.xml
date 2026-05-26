@@ -16,6 +16,11 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".features.settings.CrashActivity"
+            android:exported="false"
+            android:theme="@style/Theme.PipeListPro" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="com.synfusion.pipelistpro.fileprovider"

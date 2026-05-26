@@ -1,4 +1,4 @@
-package com.synfusion.pipelistpro.ui.theme
+package com.synfusion.pipelistpro.core.theme
 
 import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -37,8 +37,8 @@ private val LightColorScheme = lightColorScheme(
 )
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Color(0xFF60A5FA),
-    onPrimary = Color(0xFF003366),
+    primary = Color(0xFF3B82F6),
+    onPrimary = Color.White,
     primaryContainer = Color(0xFF1E293B),
     onPrimaryContainer = Color(0xFFD1E9FF),
     secondary = Color(0xFFA78BFA),
@@ -50,7 +50,7 @@ private val DarkColorScheme = darkColorScheme(
     surface = CardDark,
     onSurface = TextWhite,
     surfaceVariant = Color(0xFF334155),
-    onSurfaceVariant = TextGray,
+    onSurfaceVariant = Color(0xFFE2E8F0),
     outline = Color(0xFF475569),
     outlineVariant = Color(0xFF1E293B),
     error = Color(0xFFF87171),

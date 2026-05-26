@@ -1,7 +1,7 @@
 package com.synfusion.pipelistpro
 
-import com.synfusion.pipelistpro.model.MaterialItem
-import com.synfusion.pipelistpro.utils.SearchUtils
+import com.synfusion.pipelistpro.data.models.MaterialItem
+import com.synfusion.pipelistpro.core.utils.SearchUtils
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test

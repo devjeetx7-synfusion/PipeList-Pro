@@ -1,6 +1,6 @@
-package com.synfusion.pipelistpro.utils
+package com.synfusion.pipelistpro.core.utils
 
-import com.synfusion.pipelistpro.model.MaterialItem
+import com.synfusion.pipelistpro.data.models.MaterialItem
 
 object SearchUtils {
     /**

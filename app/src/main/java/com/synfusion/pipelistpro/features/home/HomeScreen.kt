@@ -1,4 +1,4 @@
-package com.synfusion.pipelistpro.ui.screens
+package com.synfusion.pipelistpro.features.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -11,7 +11,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,14 +23,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.synfusion.pipelistpro.ui.components.*
-import com.synfusion.pipelistpro.ui.theme.GradientEnd
-import com.synfusion.pipelistpro.ui.theme.GradientStart
-import com.synfusion.pipelistpro.viewmodel.ProjectViewModel
+import com.synfusion.pipelistpro.core.theme.GradientEnd
+import com.synfusion.pipelistpro.core.theme.GradientStart
+import com.synfusion.pipelistpro.features.cart.ProjectViewModel
 
 @Composable
 fun HomeScreen(viewModel: ProjectViewModel, navController: NavController) {
-    val savedProjects by viewModel.savedProjects.observeAsState(emptyList())
-    val currentProject by viewModel.currentProject.observeAsState()
+    val savedProjects by viewModel.savedProjects.collectAsState(emptyList())
+    val currentProject by viewModel.currentProject.collectAsState()
 
     val totalProjects = savedProjects.size
 

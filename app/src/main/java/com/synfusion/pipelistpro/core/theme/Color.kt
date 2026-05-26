@@ -1,4 +1,4 @@
-package com.synfusion.pipelistpro.ui.theme
+package com.synfusion.pipelistpro.core.theme
 
 import androidx.compose.ui.graphics.Color
 
