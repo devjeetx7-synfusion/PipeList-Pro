@@ -67,19 +67,22 @@ fun MainApp(viewModel: ProjectViewModel) {
     val currentRoute = navBackStackEntry?.destination?.route
 
     Box(modifier = Modifier.fillMaxSize()) {
+        val bottomBarRoutes = setOf("home", "settings")
+        val shouldShowBottomBar = currentRoute in bottomBarRoutes
+
         // Main Content Area
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(
-                    bottom = if (currentRoute != "splash" && currentRoute != "material") WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() else 0.dp
+                    bottom = if (shouldShowBottomBar) WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() else 0.dp
                 )
         ) {
             AppNavigation(navController, viewModel)
         }
 
         // Truly Floating Bottom Navigation
-        if (currentRoute != "splash" && currentRoute != "material") {
+        if (shouldShowBottomBar) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()

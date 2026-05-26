@@ -208,10 +208,13 @@ fun MaterialItemCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            val isAddEnabled = if (unit == "ft") ft != null && ft > 0 else true
+
             Button(
                 onClick = onAddClick,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
+                enabled = isAddEnabled,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = Color.White

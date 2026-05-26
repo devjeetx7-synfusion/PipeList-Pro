@@ -36,15 +36,14 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.graphics.SolidColor
 
+import androidx.compose.ui.text.style.TextOverflow
+
 @Composable
-fun CartItemRow(
+fun CartItemCard(
     item: com.synfusion.pipelistpro.data.models.CartItem,
     onQuantityChange: (Int) -> Unit,
-    onDetailsChange: (String, Double?, String) -> Unit,
     onRemove: () -> Unit
 ) {
-    var sizeInput by remember(item.size) { mutableStateOf(item.size) }
-    var ftInput by remember(item.ft) { mutableStateOf(item.ft?.toString() ?: "") }
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -53,8 +52,8 @@ fun CartItemRow(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp),
-        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
     ) {
         Row(
             modifier = Modifier
@@ -78,50 +77,27 @@ fun CartItemRow(
                 Text(
                     text = item.name,
                     style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    BasicTextField(
-                        value = sizeInput,
-                        onValueChange = {
-                            sizeInput = it
-                            onDetailsChange(it, item.ft, item.unit)
-                        },
-                        modifier = Modifier
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), RoundedCornerShape(4.dp))
-                            .padding(horizontal = 4.dp, vertical = 2.dp)
-                            .width(50.dp),
-                        textStyle = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurface),
-                        singleLine = true,
-                        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
-                    )
-
-                    if (item.unit == "ft" || item.ft != null) {
-                        Text(" • ", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-                        BasicTextField(
-                            value = ftInput,
-                            onValueChange = {
-                                ftInput = it
-                                val newFt = it.toDoubleOrNull()
-                                onDetailsChange(sizeInput, newFt, item.unit)
-                            },
-                            modifier = Modifier
-                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), RoundedCornerShape(4.dp))
-                                .padding(horizontal = 4.dp, vertical = 2.dp)
-                                .width(40.dp),
-                            textStyle = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurface),
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary)
-                        )
-                        Text(" ft", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-                    }
-
-                    Text(" • ${item.category}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                val metaText = if (item.unit == "ft" || item.ft != null) {
+                    val ftDisplay = if (item.ft?.rem(1.0) == 0.0) item.ft.toInt().toString() else item.ft.toString()
+                    "${item.size} • $ftDisplay ft • ${item.category}"
+                } else {
+                    "${item.size} • ${item.category}"
                 }
+
+                Text(
+                    text = metaText,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
 
             Row(
@@ -134,14 +110,13 @@ fun CartItemRow(
                     .padding(2.dp)
             ) {
                 IconButton(
-                    onClick = { if (item.quantity > 1) onQuantityChange(item.quantity - 1) },
-                    modifier = Modifier.size(32.dp),
-                    enabled = item.quantity > 1
+                    onClick = { onQuantityChange(item.quantity - 1) },
+                    modifier = Modifier.size(32.dp)
                 ) {
                     Icon(
                         Icons.Default.Remove,
                         contentDescription = null,
-                        tint = if (item.quantity > 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -159,8 +134,9 @@ fun CartItemRow(
                 }
             }
 
+            val unitLabel = if (item.unit == "ft" || item.ft != null) "ft" else "pcs"
             Text(
-                text = item.unit,
+                text = unitLabel,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(start = 8.dp).width(28.dp)
@@ -311,12 +287,13 @@ fun ProjectListScreen(viewModel: com.synfusion.pipelistpro.features.cart.Project
                     }
                 )
             }
-        }
+        },
+        contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(top = paddingValues.calculateTopPadding())
                 .background(MaterialTheme.colorScheme.background)
         ) {
             AppTopHeader(
@@ -343,23 +320,24 @@ fun ProjectListScreen(viewModel: com.synfusion.pipelistpro.features.cart.Project
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth(),
-                    contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 24.dp)
+                    contentPadding = PaddingValues(
+                        start = 24.dp,
+                        end = 24.dp,
+                        bottom = paddingValues.calculateBottomPadding() + 24.dp
+                    )
                 ) {
                     groupedItems.forEach { (category, items) ->
                         item {
                             SectionTitle(title = category, modifier = Modifier.padding(vertical = 12.dp))
                         }
                         items(items) { item ->
-                            CartItemRow(
+                            CartItemCard(
                                 item = item,
                                 onQuantityChange = { newQty ->
-                                    viewModel.updateItemQuantityByItem(item, newQty)
-                                },
-                                onDetailsChange = { newSize, newFt, newUnit ->
-                                    viewModel.updateCartItemDetails(item, newSize, newFt, newUnit)
+                                    viewModel.updateCartItemQuantity(item.id, newQty)
                                 },
                                 onRemove = {
-                                    viewModel.removeItemByItem(item)
+                                    viewModel.updateCartItemQuantity(item.id, 0)
                                     scope.launch {
                                         val result = snackbarHostState.showSnackbar(
                                             message = "${item.name} removed",

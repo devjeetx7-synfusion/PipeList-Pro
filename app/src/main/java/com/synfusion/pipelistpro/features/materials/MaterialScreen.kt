@@ -25,7 +25,7 @@ import com.synfusion.pipelistpro.data.models.CartItem
 import com.synfusion.pipelistpro.ui.components.MaterialCategoryChip
 import com.synfusion.pipelistpro.ui.components.MaterialItemCard
 import com.synfusion.pipelistpro.features.cart.ProjectViewModel
-import com.synfusion.pipelistpro.features.cart.CartItemRow
+import com.synfusion.pipelistpro.features.cart.CartItemCard
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -162,6 +162,7 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                         onFtChange = { viewModel.updateMaterialFt(material.id, it) },
                         onQuantityChange = { viewModel.updateMaterialQuantity(material.id, it) },
                         onAddClick = {
+                            val finalFt = if (material.unit == "ft") materialState.ft else null
                             viewModel.addItemToCurrentProject(
                                 CartItem(
                                     materialId = material.id,
@@ -170,7 +171,7 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                                     size = materialState.size,
                                     quantity = materialState.quantity,
                                     unit = material.unit,
-                                    ft = materialState.ft
+                                    ft = finalFt
                                 )
                             )
                         }
@@ -291,13 +292,10 @@ fun SelectedItemsBottomSheet(
                             )
                         }
                         items(items) { item ->
-                            CartItemRow(
+                            CartItemCard(
                                 item = item,
-                                onQuantityChange = { viewModel.updateItemQuantityByItem(item, it) },
-                                onDetailsChange = { newSize, newFt, newUnit ->
-                                    viewModel.updateCartItemDetails(item, newSize, newFt, newUnit)
-                                },
-                                onRemove = { viewModel.removeItemByItem(item) }
+                                onQuantityChange = { viewModel.updateCartItemQuantity(item.id, it) },
+                                onRemove = { viewModel.updateCartItemQuantity(item.id, 0) }
                             )
                         }
                     }

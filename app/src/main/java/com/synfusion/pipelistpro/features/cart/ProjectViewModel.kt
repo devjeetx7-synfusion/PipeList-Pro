@@ -65,54 +65,21 @@ class ProjectViewModel(application: Application) : AndroidViewModel(application)
         _currentProject.value = newProject
     }
 
-    fun updateItemQuantityByItem(targetItem: CartItem, newQuantity: Int) {
-        _currentProject.value?.let { project ->
-            val index = project.items.indexOfFirst {
-                it.id == targetItem.id || (
-                    it.materialId.isNotEmpty() && it.materialId == targetItem.materialId && it.size == targetItem.size && it.unit == targetItem.unit && it.ft == targetItem.ft
-                ) || (
-                    it.materialId.isEmpty() && it.category == targetItem.category && it.name == targetItem.name && it.size == targetItem.size && it.unit == targetItem.unit && it.ft == targetItem.ft
-                )
-            }
-            if (index != -1 && newQuantity > 0) {
-                val item = project.items[index]
-                project.items[index] = item.copy(quantity = newQuantity)
-                val updatedProject = project.copy(items = project.items.toMutableList())
-                _currentProject.value = updatedProject
-            } else if (index != -1 && newQuantity <= 0) {
-                removeItemByItem(targetItem)
-            }
-        }
-    }
+    fun updateCartItemQuantity(cartItemId: String, newQuantity: Int) {
+        if (newQuantity < 0) return
 
-    fun updateCartItemDetails(targetItem: CartItem, newSize: String, newFt: Double?, newUnit: String) {
         _currentProject.value?.let { project ->
-            val index = project.items.indexOfFirst { it.id == targetItem.id }
+            val index = project.items.indexOfFirst { it.id == cartItemId }
             if (index != -1) {
-                val item = project.items[index]
-                project.items[index] = item.copy(size = newSize, ft = newFt, unit = newUnit)
-                val updatedProject = project.copy(items = project.items.toMutableList())
-                _currentProject.value = updatedProject
-            }
-        }
-    }
-
-    fun updateItemQuantity(position: Int, newQuantity: Int) {
-        _currentProject.value?.let { project ->
-            if (position in project.items.indices && newQuantity > 0) {
-                val item = project.items[position]
-                val updatedItem = CartItem(
-                    name = item.name,
-                    category = item.category,
-                    size = item.size,
-                    quantity = newQuantity,
-                    unit = item.unit,
-                    ft = item.ft
-                )
-                project.items[position] = updatedItem
-                _currentProject.value = project
-            } else if (newQuantity == 0) {
-                removeItemFromCurrentProject(position)
+                if (newQuantity == 0) {
+                    val updatedItems = project.items.toMutableList()
+                    updatedItems.removeAt(index)
+                    _currentProject.value = project.copy(items = updatedItems)
+                } else {
+                    val updatedItems = project.items.toMutableList()
+                    updatedItems[index] = updatedItems[index].copy(quantity = newQuantity)
+                    _currentProject.value = project.copy(items = updatedItems)
+                }
             }
         }
     }
