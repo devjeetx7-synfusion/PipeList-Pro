@@ -146,7 +146,7 @@ fun CartItemCard(
 }
 
 @Composable
-fun ProjectActionBar(
+fun BottomActionPanel(
     itemCount: Int,
     totalQuantity: Int,
     categoryCount: Int,
@@ -260,7 +260,7 @@ fun ProjectListScreen(viewModel: com.synfusion.pipelistpro.features.cart.Project
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         bottomBar = {
             if (currentProject != null && currentProject!!.items.isNotEmpty()) {
-                ProjectActionBar(
+                BottomActionPanel(
                     itemCount = currentProject!!.items.size,
                     totalQuantity = currentProject!!.items.sumOf { it.quantity },
                     categoryCount = currentProject!!.items.groupBy { it.category }.size,
@@ -287,13 +287,12 @@ fun ProjectListScreen(viewModel: com.synfusion.pipelistpro.features.cart.Project
                     }
                 )
             }
-        },
-        contentWindowInsets = WindowInsets(0, 0, 0, 0)
+        }
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = paddingValues.calculateTopPadding())
+                .padding(paddingValues)
                 .background(MaterialTheme.colorScheme.background)
         ) {
             AppTopHeader(
@@ -323,7 +322,7 @@ fun ProjectListScreen(viewModel: com.synfusion.pipelistpro.features.cart.Project
                     contentPadding = PaddingValues(
                         start = 24.dp,
                         end = 24.dp,
-                        bottom = paddingValues.calculateBottomPadding() + 24.dp
+                        bottom = 24.dp
                     )
                 ) {
                     groupedItems.forEach { (category, items) ->
@@ -331,23 +330,29 @@ fun ProjectListScreen(viewModel: com.synfusion.pipelistpro.features.cart.Project
                             SectionTitle(title = category, modifier = Modifier.padding(vertical = 12.dp))
                         }
                         items(items) { item ->
+                            val handleRemove = {
+                                viewModel.updateCartItemQuantity(item.id, 0)
+                                scope.launch {
+                                    val result = snackbarHostState.showSnackbar(
+                                        message = "${item.name} removed",
+                                        actionLabel = "Undo"
+                                    )
+                                    if (result == SnackbarResult.ActionPerformed) {
+                                        viewModel.addItemToCurrentProject(item)
+                                    }
+                                }
+                            }
+
                             CartItemCard(
                                 item = item,
                                 onQuantityChange = { newQty ->
-                                    viewModel.updateCartItemQuantity(item.id, newQty)
-                                },
-                                onRemove = {
-                                    viewModel.updateCartItemQuantity(item.id, 0)
-                                    scope.launch {
-                                        val result = snackbarHostState.showSnackbar(
-                                            message = "${item.name} removed",
-                                            actionLabel = "Undo"
-                                        )
-                                        if (result == SnackbarResult.ActionPerformed) {
-                                            viewModel.addItemToCurrentProject(item)
-                                        }
+                                    if (newQty == 0) {
+                                        handleRemove()
+                                    } else {
+                                        viewModel.updateCartItemQuantity(item.id, newQty)
                                     }
-                                }
+                                },
+                                onRemove = { handleRemove() }
                             )
                         }
                     }

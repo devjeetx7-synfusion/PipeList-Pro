@@ -294,7 +294,10 @@ fun SelectedItemsBottomSheet(
                         items(items) { item ->
                             CartItemCard(
                                 item = item,
-                                onQuantityChange = { viewModel.updateCartItemQuantity(item.id, it) },
+                                onQuantityChange = { newQty ->
+                                    if (newQty == 0) viewModel.updateCartItemQuantity(item.id, 0)
+                                    else viewModel.updateCartItemQuantity(item.id, newQty)
+                                },
                                 onRemove = { viewModel.updateCartItemQuantity(item.id, 0) }
                             )
                         }

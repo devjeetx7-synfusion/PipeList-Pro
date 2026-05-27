@@ -90,6 +90,7 @@ class ProjectViewModel(application: Application) : AndroidViewModel(application)
 
     fun addItemToCurrentProject(item: CartItem) {
         _currentProject.value?.let { project ->
+            // Merges item if it matches materialId + size + unit + ft
             val existingIndex = project.items.indexOfFirst {
                 (it.materialId.isNotEmpty() && it.materialId == item.materialId && it.size == item.size && it.unit == item.unit && it.ft == item.ft) ||
                 (it.materialId.isEmpty() && it.category == item.category && it.name == item.name && it.size == item.size && it.unit == item.unit && it.ft == item.ft)
