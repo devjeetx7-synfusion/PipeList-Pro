@@ -2,6 +2,7 @@ package com.synfusion.pipelistpro.features.materials
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -49,6 +50,7 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             TopAppBar(
                 title = { Text("Add Materials", fontWeight = FontWeight.Bold) },
@@ -72,7 +74,7 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                                     text = currentProject?.items?.size.toString(),
                                     modifier = Modifier.padding(horizontal = 4.dp),
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = Color.White
+                                    color = MaterialTheme.colorScheme.onError
                                 )
                             }
                         }
@@ -202,18 +204,18 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.ShoppingCart, contentDescription = null, tint = Color.White)
+                                Icon(Icons.Default.ShoppingCart, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary)
                                 Spacer(modifier = Modifier.width(12.dp))
                                 val uniqueItemCount = currentProject?.items?.size ?: 0
                                 Text(
                                     text = "$uniqueItemCount ${if (uniqueItemCount == 1) "item" else "items"} selected",
-                                    color = Color.White,
+                                    color = MaterialTheme.colorScheme.onPrimary,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
                             Text(
                                 text = "View List",
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onPrimary,
                                 fontWeight = FontWeight.ExtraBold,
                                 style = MaterialTheme.typography.labelLarge
                             )
@@ -331,7 +333,7 @@ fun SelectedItemsBottomSheet(
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = Color.White
+                        contentColor = MaterialTheme.colorScheme.onPrimary
                     )
                 ) {
                     Text("View List", fontWeight = FontWeight.Bold)

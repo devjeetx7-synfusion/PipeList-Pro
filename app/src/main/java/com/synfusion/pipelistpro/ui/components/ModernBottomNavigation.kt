@@ -79,7 +79,7 @@ fun ModernBottomNavigation(
             onClick = onAddClick,
             shape = CircleShape,
             containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = Color.White,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
             modifier = Modifier
                 .size(56.dp)
                 .offset(y = (-32).dp),

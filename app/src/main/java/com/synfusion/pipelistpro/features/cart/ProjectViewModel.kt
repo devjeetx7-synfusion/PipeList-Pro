@@ -66,20 +66,14 @@ class ProjectViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun updateCartItemQuantity(cartItemId: String, newQuantity: Int) {
-        if (newQuantity < 0) return
+        if (newQuantity < 1) return
 
         _currentProject.value?.let { project ->
             val index = project.items.indexOfFirst { it.id == cartItemId }
             if (index != -1) {
-                if (newQuantity == 0) {
-                    val updatedItems = project.items.toMutableList()
-                    updatedItems.removeAt(index)
-                    _currentProject.value = project.copy(items = updatedItems)
-                } else {
-                    val updatedItems = project.items.toMutableList()
-                    updatedItems[index] = updatedItems[index].copy(quantity = newQuantity)
-                    _currentProject.value = project.copy(items = updatedItems)
-                }
+                val updatedItems = project.items.toMutableList()
+                updatedItems[index] = updatedItems[index].copy(quantity = newQuantity)
+                _currentProject.value = project.copy(items = updatedItems)
             }
         }
     }
@@ -92,8 +86,11 @@ class ProjectViewModel(application: Application) : AndroidViewModel(application)
         _currentProject.value?.let { project ->
             // Merges item if it matches materialId + size + unit + ft
             val existingIndex = project.items.indexOfFirst {
-                (it.materialId.isNotEmpty() && it.materialId == item.materialId && it.size == item.size && it.unit == item.unit && it.ft == item.ft) ||
-                (it.materialId.isEmpty() && it.category == item.category && it.name == item.name && it.size == item.size && it.unit == item.unit && it.ft == item.ft)
+                it.materialId == item.materialId &&
+                it.name == item.name &&
+                it.size == item.size &&
+                it.unit == item.unit &&
+                it.ft == item.ft
             }
 
             val updatedItems = project.items.toMutableList()
@@ -178,6 +175,13 @@ class ProjectViewModel(application: Application) : AndroidViewModel(application)
 
     fun getMaterialState(materialId: String, defaultSize: String): MaterialState {
         return materialStates.getOrPut(materialId) { MaterialState(defaultSize, 1) }
+    }
+
+    fun removeCartItem(cartItemId: String) {
+        _currentProject.value?.let { project ->
+            val updatedItems = project.items.filter { it.id != cartItemId }.toMutableList()
+            _currentProject.value = project.copy(items = updatedItems)
+        }
     }
 
     fun updateMaterialSize(materialId: String, newSize: String) {
