@@ -71,7 +71,7 @@ fun HomeScreen(viewModel: ProjectViewModel, navController: NavController) {
                 QuickActionItem(
                     title = "Create",
                     icon = Icons.Default.AddCircle,
-                    color = Color(0xFF2563EB),
+                    color = MaterialTheme.colorScheme.primary,
                     onClick = {
                         viewModel.startNewProject()
                         navController.navigate("material")
@@ -81,14 +81,14 @@ fun HomeScreen(viewModel: ProjectViewModel, navController: NavController) {
                 QuickActionItem(
                     title = "Saved",
                     icon = Icons.Default.Folder,
-                    color = Color(0xFF7C3AED),
+                    color = MaterialTheme.colorScheme.secondary,
                     onClick = { navController.navigate("project_list") },
                     modifier = Modifier.weight(1f)
                 )
                 QuickActionItem(
                     title = "Settings",
                     icon = Icons.Default.Settings,
-                    color = Color(0xFF64748B),
+                    color = MaterialTheme.colorScheme.tertiary,
                     onClick = { navController.navigate("settings") },
                     modifier = Modifier.weight(1f)
                 )

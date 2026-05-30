@@ -3,6 +3,7 @@ package com.synfusion.pipelistpro.features.cart
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -68,7 +69,7 @@ fun CartItemCard(
                 Icon(
                     Icons.Default.Delete,
                     contentDescription = "Remove",
-                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
+                    tint = MaterialTheme.colorScheme.error,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -110,13 +111,14 @@ fun CartItemCard(
                     .padding(2.dp)
             ) {
                 IconButton(
-                    onClick = { onQuantityChange(item.quantity - 1) },
-                    modifier = Modifier.size(32.dp)
+                    onClick = { if (item.quantity > 1) onQuantityChange(item.quantity - 1) },
+                    modifier = Modifier.size(32.dp),
+                    enabled = item.quantity > 1
                 ) {
                     Icon(
                         Icons.Default.Remove,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = if (item.quantity > 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -255,11 +257,16 @@ fun ProjectListScreen(viewModel: com.synfusion.pipelistpro.features.cart.Project
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    var isExporting by remember { mutableStateOf(false) }
 
     Scaffold(
+        contentWindowInsets = WindowInsets.safeDrawing,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         bottomBar = {
             if (currentProject != null && currentProject!!.items.isNotEmpty()) {
+                if (isExporting) {
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                }
                 BottomActionPanel(
                     itemCount = currentProject!!.items.size,
                     totalQuantity = currentProject!!.items.sumOf { it.quantity },
@@ -269,20 +276,32 @@ fun ProjectListScreen(viewModel: com.synfusion.pipelistpro.features.cart.Project
                         navController.popBackStack()
                     },
                     onPdf = {
+                        if (isExporting) return@BottomActionPanel
                         currentProject?.let { project ->
-                            com.synfusion.pipelistpro.features.export.PdfGenerator.generateProjectPdf(navController.context, project)?.let { file ->
-                                com.synfusion.pipelistpro.core.utils.ShareUtils.sharePdfFile(navController.context, file)
+                            scope.launch {
+                                isExporting = true
+                                com.synfusion.pipelistpro.core.export.PdfExportManager.generatePdf(navController.context, project)?.let { file ->
+                                    com.synfusion.pipelistpro.core.export.ShareManager.shareFile(navController.context, file, "application/pdf", "Share PDF")
+                                } ?: snackbarHostState.showSnackbar("Failed to generate PDF")
+                                isExporting = false
                             }
                         }
                     },
                     onImage = {
+                        if (isExporting) return@BottomActionPanel
                         currentProject?.let { project ->
-                            com.synfusion.pipelistpro.core.utils.ShareUtils.shareProjectAsImage(navController.context, project)
+                            scope.launch {
+                                isExporting = true
+                                com.synfusion.pipelistpro.core.export.ImageExportManager.generateImage(navController.context, project)?.let { file ->
+                                    com.synfusion.pipelistpro.core.export.ShareManager.shareFile(navController.context, file, "image/png", "Share Image")
+                                } ?: snackbarHostState.showSnackbar("Failed to generate Image")
+                                isExporting = false
+                            }
                         }
                     },
                     onText = {
                         currentProject?.let { project ->
-                            com.synfusion.pipelistpro.core.utils.ShareUtils.shareProjectAsText(navController.context, project)
+                            com.synfusion.pipelistpro.core.export.ShareManager.shareText(navController.context, project)
                         }
                     }
                 )
@@ -329,9 +348,9 @@ fun ProjectListScreen(viewModel: com.synfusion.pipelistpro.features.cart.Project
                         item {
                             SectionTitle(title = category, modifier = Modifier.padding(vertical = 12.dp))
                         }
-                        items(items) { item ->
+                        items(items, key = { it.id }) { item ->
                             val handleRemove = {
-                                viewModel.updateCartItemQuantity(item.id, 0)
+                                viewModel.removeCartItem(item.id)
                                 scope.launch {
                                     val result = snackbarHostState.showSnackbar(
                                         message = "${item.name} removed",
@@ -346,11 +365,7 @@ fun ProjectListScreen(viewModel: com.synfusion.pipelistpro.features.cart.Project
                             CartItemCard(
                                 item = item,
                                 onQuantityChange = { newQty ->
-                                    if (newQty == 0) {
-                                        handleRemove()
-                                    } else {
-                                        viewModel.updateCartItemQuantity(item.id, newQty)
-                                    }
+                                    viewModel.updateCartItemQuantity(item.id, newQty)
                                 },
                                 onRemove = { handleRemove() }
                             )
