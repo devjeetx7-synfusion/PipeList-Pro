@@ -189,6 +189,7 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                         },
                         onAddClick = {
                             val finalFt = if (material.unit == "ft") effectiveFt else null
+                            val finalFt = if (material.unit == "ft") materialState.ft ?: 1.0 else null
                             viewModel.addItemToCurrentProject(
                                 CartItem(
                                     materialId = material.id,
@@ -204,6 +205,7 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                     )
                 }
 
+                    item { Spacer(modifier = Modifier.height(80.dp)) }
                 }
 
                 // Mini Cart Bar
