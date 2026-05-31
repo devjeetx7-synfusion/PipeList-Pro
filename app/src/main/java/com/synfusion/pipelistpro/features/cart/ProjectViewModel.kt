@@ -5,13 +5,16 @@ import android.content.Context
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.lifecycle.AndroidViewModel
 import com.synfusion.pipelistpro.core.utils.SearchUtils
+import androidx.lifecycle.viewModelScope
 import com.synfusion.pipelistpro.data.models.CartItem
+import com.synfusion.pipelistpro.data.models.MaterialCategory
 import com.synfusion.pipelistpro.data.models.MaterialItem
 import com.synfusion.pipelistpro.data.models.Project
 import com.synfusion.pipelistpro.data.models.ThemeMode
-import com.synfusion.pipelistpro.data.repository.MaterialCatalog
+import com.synfusion.pipelistpro.data.repository.MaterialRepository
 import com.synfusion.pipelistpro.data.storage.ProjectStorage
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.StateFlow
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -29,7 +32,12 @@ class ProjectViewModel(application: Application) : AndroidViewModel(application)
     private val _currentProject = MutableStateFlow<Project?>(null)
     val currentProject: StateFlow<Project?> = _currentProject
 
-    private val _searchResults = MutableStateFlow(MaterialCatalog.materials)
+    private val repository = MaterialRepository(application)
+
+    private val _categories = MutableStateFlow<List<MaterialCategory>>(emptyList())
+    val categories: StateFlow<List<MaterialCategory>> = _categories
+
+    private val _searchResults = MutableStateFlow<List<MaterialItem>>(emptyList())
     val searchResults: StateFlow<List<MaterialItem>> = _searchResults
 
     private val initialThemeMode = runCatching {
@@ -50,6 +58,15 @@ class ProjectViewModel(application: Application) : AndroidViewModel(application)
     init {
         loadSavedProjects()
         _currentProject.value = storage.getCurrentProject()
+        loadMaterials()
+    }
+
+    private fun loadMaterials() {
+        viewModelScope.launch {
+            val database = repository.getDatabase()
+            _categories.value = database.categories
+            _searchResults.value = database.categories.flatMap { it.items }
+        }
     }
 
     fun setThemeMode(mode: ThemeMode) {
@@ -242,7 +259,10 @@ class ProjectViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun searchMaterials(query: String) {
-        _searchResults.value = SearchUtils.filterMaterials(MaterialCatalog.materials, query)
+        viewModelScope.launch {
+            val all = repository.getAllMaterials()
+            _searchResults.value = SearchUtils.filterMaterials(all, query)
+        }
     }
 
     fun applyTemplate(templateItems: List<CartItem>) {

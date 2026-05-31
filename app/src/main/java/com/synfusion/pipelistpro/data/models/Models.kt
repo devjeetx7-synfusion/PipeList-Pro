@@ -7,11 +7,32 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 data class MaterialItem(
     val id: String,
+    val categoryId: String,
+    val categoryName: String,
+    val system: String,
+    val group: String,
     val name: String,
-    val category: String,
+    val alias: String,
     val sizes: List<String>,
     val unit: String,
-    val searchKeywords: List<String>
+    val jointType: String,
+    val purpose: String,
+    val notes: String
+) : Parcelable
+
+@Parcelize
+data class MaterialCategory(
+    val id: String,
+    val name: String,
+    val displayName: String,
+    val sortOrder: Int,
+    val items: List<MaterialItem>
+) : Parcelable
+
+@Parcelize
+data class PlumbingMaterialDatabase(
+    val version: Int,
+    val categories: List<MaterialCategory>
 ) : Parcelable
 
 @Parcelize

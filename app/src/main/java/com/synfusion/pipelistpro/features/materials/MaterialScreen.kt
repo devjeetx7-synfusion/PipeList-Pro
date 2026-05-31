@@ -33,15 +33,14 @@ import com.synfusion.pipelistpro.features.cart.CartItemCard
 @Composable
 fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
     val searchResults by viewModel.searchResults.collectAsState(emptyList())
+    val categories by viewModel.categories.collectAsState(emptyList())
     val currentProject by viewModel.currentProject.collectAsState()
 
     var searchQuery by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableStateOf("UPVC") }
+    var selectedCategoryId by remember { mutableStateOf("upvc") }
     var showCartSheet by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     LaunchedEffect(Unit) { viewModel.ensureProjectStarted() }
-
-    val categories = listOf("UPVC", "CPVC", "PVC", "SWR", "GI", "HDPE", "Tools/Other")
 
     if (showCartSheet) {
         SelectedItemsBottomSheet(
@@ -124,20 +123,13 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                 contentPadding = PaddingValues(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(categories) { category ->
+                items(categories, key = { it.id }) { category ->
                     MaterialCategoryChip(
-                        category = category,
-                        isSelected = selectedCategory == category,
-                        onClick = { selectedCategory = category }
+                        category = category.name,
+                        isSelected = selectedCategoryId == category.id,
+                        onClick = { selectedCategoryId = category.id }
                     )
                 }
-            }
-
-            // Material List
-            val filteredMaterials = if (searchQuery.isBlank()) {
-                searchResults.filter { it.category == selectedCategory }
-            } else {
-                searchResults
             }
 
             Box(modifier = Modifier.weight(1f)) {
@@ -151,59 +143,29 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                     ),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                items(filteredMaterials, key = { it.id }) { material ->
-                    val materialState = viewModel.getMaterialState(material.id, material.sizes.first())
-                    val effectiveFt = if (material.unit == "ft") materialState.ft ?: 1.0 else null
-                    val matchingItems = currentProject?.items?.filter {
-                        it.materialId == material.id &&
-                            it.size.equals(materialState.size, ignoreCase = true) &&
-                            it.unit.equals(material.unit, ignoreCase = true) &&
-                            ((it.ft == null && effectiveFt == null) || (it.ft != null && effectiveFt != null && kotlin.math.abs(it.ft - effectiveFt) < 0.001))
-                    } ?: emptyList()
+                    if (searchQuery.isBlank()) {
+                        val categoryMaterials = searchResults.filter { it.categoryId == selectedCategoryId }
+                        val groupedMaterials = categoryMaterials.groupBy { it.group }
 
-                    val totalQtyInCart = matchingItems.sumOf { it.quantity }
-                    val displayedQuantity = totalQtyInCart.takeIf { it > 0 } ?: materialState.quantity
-
-                    MaterialItemCard(
-                        name = material.name,
-                        category = material.category,
-                        size = materialState.size,
-                        sizes = material.sizes,
-                        unit = material.unit,
-                        ft = materialState.ft,
-                        quantity = displayedQuantity,
-                        inCartCount = totalQtyInCart,
-                        onSizeChange = { newSize ->
-                            viewModel.updateMaterialSize(material.id, newSize)
-                            viewModel.updateSelectedMaterialLine(material.id, material.name, material.category, newSize, material.unit, effectiveFt, displayedQuantity)
-                        },
-                        onFtChange = { newFt ->
-                            viewModel.updateMaterialFt(material.id, newFt)
-                            if (newFt != null && newFt > 0.0) {
-                                viewModel.updateSelectedMaterialLine(material.id, material.name, material.category, materialState.size, material.unit, newFt, displayedQuantity)
-                            }
-                        },
-                        onQuantityChange = { newQuantity ->
-                            viewModel.updateMaterialQuantity(material.id, newQuantity)
-                            viewModel.updateSelectedMaterialLine(material.id, material.name, material.category, materialState.size, material.unit, effectiveFt, newQuantity)
-                        },
-                        onAddClick = {
-                            val finalFt = if (material.unit == "ft") effectiveFt else null
-                            viewModel.addItemToCurrentProject(
-                                CartItem(
-                                    materialId = material.id,
-                                    name = material.name,
-                                    category = material.category,
-                                    size = materialState.size,
-                                    quantity = displayedQuantity,
-                                    unit = material.unit,
-                                    ft = finalFt
+                        groupedMaterials.forEach { (group, items) ->
+                            item(key = "header_${selectedCategoryId}_$group") {
+                                Text(
+                                    text = group,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
                                 )
-                            )
+                            }
+                            items(items, key = { it.id }) { material ->
+                                MaterialItemCardContent(material, viewModel, currentProject)
+                            }
                         }
-                    )
-                }
-
+                    } else {
+                        items(searchResults, key = { it.id }) { material ->
+                            MaterialItemCardContent(material, viewModel, currentProject)
+                        }
+                    }
                 }
 
                 // Mini Cart Bar
@@ -248,6 +210,65 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
             }
         }
     }
+}
+
+@Composable
+fun MaterialItemCardContent(
+    material: com.synfusion.pipelistpro.data.models.MaterialItem,
+    viewModel: ProjectViewModel,
+    currentProject: com.synfusion.pipelistpro.data.models.Project?
+) {
+    val materialState = viewModel.getMaterialState(material.id, material.sizes.first())
+    val effectiveFt = if (material.unit == "ft") materialState.ft ?: 1.0 else null
+    val matchingItems = currentProject?.items?.filter {
+        it.materialId == material.id &&
+                it.size.equals(materialState.size, ignoreCase = true) &&
+                it.unit.equals(material.unit, ignoreCase = true) &&
+                ((it.ft == null && effectiveFt == null) || (it.ft != null && effectiveFt != null && kotlin.math.abs(it.ft - effectiveFt) < 0.001))
+    } ?: emptyList()
+
+    val totalQtyInCart = matchingItems.sumOf { it.quantity }
+    val displayedQuantity = totalQtyInCart.takeIf { it > 0 } ?: materialState.quantity
+
+    MaterialItemCard(
+        name = material.name,
+        alias = material.alias,
+        category = material.categoryName,
+        size = materialState.size,
+        sizes = material.sizes,
+        unit = material.unit,
+        ft = materialState.ft,
+        quantity = displayedQuantity,
+        inCartCount = totalQtyInCart,
+        onSizeChange = { newSize ->
+            viewModel.updateMaterialSize(material.id, newSize)
+            viewModel.updateSelectedMaterialLine(material.id, material.name, material.categoryName, newSize, material.unit, effectiveFt, displayedQuantity)
+        },
+        onFtChange = { newFt ->
+            viewModel.updateMaterialFt(material.id, newFt)
+            if (newFt != null && newFt > 0.0) {
+                viewModel.updateSelectedMaterialLine(material.id, material.name, material.categoryName, materialState.size, material.unit, newFt, displayedQuantity)
+            }
+        },
+        onQuantityChange = { newQuantity ->
+            viewModel.updateMaterialQuantity(material.id, newQuantity)
+            viewModel.updateSelectedMaterialLine(material.id, material.name, material.categoryName, materialState.size, material.unit, effectiveFt, newQuantity)
+        },
+        onAddClick = {
+            val finalFt = if (material.unit == "ft") effectiveFt else null
+            viewModel.addItemToCurrentProject(
+                CartItem(
+                    materialId = material.id,
+                    name = material.name,
+                    category = material.categoryName,
+                    size = materialState.size,
+                    quantity = displayedQuantity,
+                    unit = material.unit,
+                    ft = finalFt
+                )
+            )
+        }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

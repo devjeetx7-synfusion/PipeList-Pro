@@ -50,6 +50,7 @@ import java.util.Locale
 @Composable
 fun MaterialItemCard(
     name: String,
+    alias: String = "",
     category: String,
     size: String,
     sizes: List<String>,
@@ -107,10 +108,19 @@ fun MaterialItemCard(
                             AddedChip(inCartCount)
                         }
                     }
+                    if (alias.isNotBlank()) {
+                        Text(
+                            text = alias,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                     Text(
                         text = category,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
                         maxLines = 1
                     )
                 }

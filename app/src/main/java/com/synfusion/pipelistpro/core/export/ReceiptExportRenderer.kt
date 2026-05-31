@@ -11,8 +11,16 @@ import java.util.Locale
 import kotlin.math.ceil
 
 internal object ReceiptExportRenderer {
-    private val categoryOrder = listOf("UPVC", "CPVC", "PVC", "SWR", "GI", "HDPE", "OTHER")
-    private val categoryLookup = categoryOrder.associateBy { it }
+    private val categoryOrder = listOf(
+        "UPVC", "PVC", "CPVC", "SWR", "PPR", "GI", "HDPE / MDPE", "Copper / Brass",
+        "Valves", "Bathroom Fittings", "Sanitary Ware", "Water Tank & Tank Fittings",
+        "Pump & Motor", "Drainage / Manhole / Rainwater", "MS Pipe & Fittings",
+        "Stainless Steel / SS", "Borewell / Column Pipe", "Fire Fighting",
+        "Gas Line", "Solar / Geyser Hot Water", "Irrigation / Garden",
+        "Swimming Pool Plumbing", "Accessories / Clamps / Supports",
+        "Consumables", "Plumbing Tools", "OTHER"
+    )
+    private val categoryLookup = categoryOrder.associateBy { it.uppercase(Locale.getDefault()) }
 
     val imageStyle = ExportStyle(
         width = 1080f,
@@ -150,15 +158,24 @@ internal object ReceiptExportRenderer {
     }
 
     fun groupedItems(project: Project): List<Pair<String, List<CartItem>>> {
-        val groups = linkedMapOf<String, MutableList<CartItem>>()
-        categoryOrder.forEach { groups[it] = mutableListOf() }
-        project.items.forEach { item ->
-            val key = normalizedCategory(item.category)
-            groups.getOrPut(key) { mutableListOf() }.add(item)
+        val groups = project.items.groupBy { normalizedCategory(it.category) }
+        val result = mutableListOf<Pair<String, List<CartItem>>>()
+        val seen = mutableSetOf<String>()
+
+        categoryOrder.forEach { cat ->
+            groups[cat]?.let { items ->
+                result.add(cat to items)
+                seen.add(cat)
+            }
         }
-        return categoryOrder.mapNotNull { category ->
-            groups[category]?.takeIf { it.isNotEmpty() }?.let { category to it.toList() }
+
+        groups.keys.forEach { cat ->
+            if (cat !in seen) {
+                result.add(cat to groups[cat]!!)
+            }
         }
+
+        return result
     }
 
     fun measureItemRowHeight(paint: Paint, style: ExportStyle, item: CartItem, index: Int): Float {
@@ -171,8 +188,9 @@ internal object ReceiptExportRenderer {
     fun safeFileName(name: String): String = name.ifBlank { "Material_List" }.replace(Regex("[^A-Za-z0-9_-]+"), "_").take(48)
 
     private fun normalizedCategory(category: String): String {
-        val upper = category.trim().uppercase(Locale.getDefault())
-        return categoryLookup[upper] ?: "OTHER"
+        val trimmed = category.trim()
+        val upper = trimmed.uppercase(Locale.getDefault())
+        return categoryLookup[upper] ?: trimmed
     }
 
     private fun itemDisplayName(item: CartItem): String {
