@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material3.Scaffold
+import androidx.compose.ui.Alignment
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -60,8 +61,13 @@ fun MainApp(viewModel: ProjectViewModel) {
     val currentRoute = navBackStackEntry?.destination?.route
     val shouldShowBottomBar = currentRoute in setOf("home", "settings")
 
-    Scaffold(
-        bottomBar = {
+    Scaffold(contentWindowInsets = WindowInsets.safeDrawing) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            AppNavigation(navController, viewModel)
             if (shouldShowBottomBar) {
                 ModernBottomNavigation(
                     currentRoute = currentRoute,
@@ -75,18 +81,10 @@ fun MainApp(viewModel: ProjectViewModel) {
                     onAddClick = {
                         viewModel.startNewProject()
                         navController.navigate("material")
-                    }
+                    },
+                    modifier = Modifier.align(Alignment.BottomCenter)
                 )
             }
-        },
-        contentWindowInsets = WindowInsets.safeDrawing
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            AppNavigation(navController, viewModel)
         }
     }
 }

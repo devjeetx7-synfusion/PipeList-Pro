@@ -12,7 +12,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
-import kotlinx.coroutines.launch
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.collectAsState
@@ -22,7 +21,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.synfusion.pipelistpro.data.repository.MaterialCatalog
 import com.synfusion.pipelistpro.data.models.CartItem
 import com.synfusion.pipelistpro.ui.components.MaterialCategoryChip
 import com.synfusion.pipelistpro.ui.components.MaterialItemCard
@@ -38,9 +36,6 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("UPVC") }
     var showCartSheet by remember { mutableStateOf(false) }
-    val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
-
     LaunchedEffect(Unit) { viewModel.ensureProjectStarted() }
 
     val categories = listOf("UPVC", "CPVC", "PVC", "SWR", "GI", "HDPE", "Tools/Other")
@@ -56,7 +51,6 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
 
     Scaffold(
         contentWindowInsets = WindowInsets.safeDrawing,
-        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Add Materials", fontWeight = FontWeight.Bold) },
@@ -139,7 +133,7 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
             val filteredMaterials = if (searchQuery.isBlank()) {
                 searchResults.filter { it.category == selectedCategory }
             } else {
-                searchResults.filter { material -> material.category == selectedCategory || searchQuery.isNotBlank() }
+                searchResults
             }
 
             Box(modifier = Modifier.weight(1f)) {
@@ -150,7 +144,6 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                 ) {
                 items(filteredMaterials, key = { it.id }) { material ->
                     val materialState = viewModel.getMaterialState(material.id, material.sizes.first())
-
                     val itemsInCart = currentProject?.items?.filter {
                         it.name == material.name && it.category == material.category
                     } ?: emptyList()
@@ -170,7 +163,7 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                         onFtChange = { viewModel.updateMaterialFt(material.id, it) },
                         onQuantityChange = { viewModel.updateMaterialQuantity(material.id, it) },
                         onAddClick = {
-                            val finalFt = if (material.unit == "ft") materialState.ft else null
+                            val finalFt = if (material.unit == "ft") materialState.ft ?: 1.0 else null
                             viewModel.addItemToCurrentProject(
                                 CartItem(
                                     materialId = material.id,
@@ -182,14 +175,11 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                                     ft = finalFt
                                 )
                             )
-                            scope.launch { snackbarHostState.showSnackbar("${material.name} added", withDismissAction = true) }
                         }
                     )
                 }
 
-                    item {
-                        Spacer(modifier = Modifier.height(100.dp))
-                    }
+                    item { Spacer(modifier = Modifier.height(80.dp)) }
                 }
 
                 // Mini Cart Bar
@@ -202,7 +192,7 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                             .fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
                         color = MaterialTheme.colorScheme.primary,
-                        shadowElevation = 8.dp,
+                        shadowElevation = 5.dp,
                         onClick = { showCartSheet = true }
                     ) {
                         Row(

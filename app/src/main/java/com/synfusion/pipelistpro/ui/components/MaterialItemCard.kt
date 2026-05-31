@@ -2,7 +2,15 @@ package com.synfusion.pipelistpro.ui.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -10,16 +18,35 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MaterialItemCard(
     name: String,
@@ -37,21 +64,29 @@ fun MaterialItemCard(
     modifier: Modifier = Modifier
 ) {
     var showSizeDropdown by remember { mutableStateOf(false) }
-    var localFtInput by remember(ft) { mutableStateOf(ft?.toString() ?: "") }
-
+    var localFtInput by remember(ft, unit) { mutableStateOf(if (unit == "ft") formatNumber(ft ?: 1.0) else "") }
     val isAdded = inCartCount > 0
+    val effectiveFt = if (unit == "ft") localFtInput.toDoubleOrNull() else null
+    val isAddEnabled = quantity >= 1 && (unit != "ft" || (effectiveFt != null && effectiveFt > 0.0))
+
+    LaunchedEffect(unit) {
+        if (unit == "ft" && ft == null) onFtChange(1.0)
+    }
 
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
+            containerColor = if (isAdded) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.22f) else MaterialTheme.colorScheme.surface,
             contentColor = MaterialTheme.colorScheme.onSurface
         ),
-        border = if (isAdded) BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)) else BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
+        border = BorderStroke(
+            width = if (isAdded) 1.dp else 0.5.dp,
+            color = if (isAdded) MaterialTheme.colorScheme.primary.copy(alpha = 0.45f) else MaterialTheme.colorScheme.outline.copy(alpha = 0.28f)
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Top,
@@ -62,154 +97,92 @@ fun MaterialItemCard(
                         Text(
                             text = name,
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.weight(1f, fill = false)
                         )
-                        if (inCartCount > 0) {
-                            Surface(
-                                modifier = Modifier.padding(start = 8.dp),
-                                color = MaterialTheme.colorScheme.primaryContainer,
-                                shape = RoundedCornerShape(8.dp)
-                            ) {
-                                Text(
-                                    text = "Added: $inCartCount",
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
+                        if (isAdded) {
+                            AddedChip(inCartCount)
                         }
                     }
                     Text(
                         text = category,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1
                     )
                 }
-
                 CategoryBadge(category)
             }
-
-            Spacer(modifier = Modifier.height(12.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Size Selector
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box {
-                        Surface(
-                            onClick = { if (sizes.size > 1) showSizeDropdown = true },
-                            shape = RoundedCornerShape(12.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                            border = if (sizes.size > 1) BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)) else null
+                Box {
+                    Surface(
+                        onClick = { if (sizes.size > 1) showSizeDropdown = true },
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = size,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Medium
-                                )
-                                if (sizes.size > 1) {
-                                    Icon(
-                                        imageVector = Icons.Default.ArrowDropDown,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(20.dp)
-                                    )
+                            Text(size, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, maxLines = 1)
+                            if (sizes.size > 1) Icon(Icons.Default.ArrowDropDown, contentDescription = "Select size", modifier = Modifier.size(18.dp))
+                        }
+                    }
+                    DropdownMenu(expanded = showSizeDropdown, onDismissRequest = { showSizeDropdown = false }) {
+                        sizes.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option) },
+                                onClick = {
+                                    onSizeChange(option)
+                                    showSizeDropdown = false
                                 }
-                            }
-                        }
-
-                        DropdownMenu(
-                            expanded = showSizeDropdown,
-                            onDismissRequest = { showSizeDropdown = false },
-                            modifier = Modifier.background(MaterialTheme.colorScheme.surface)
-                        ) {
-                            sizes.forEach { s ->
-                                DropdownMenuItem(
-                                    text = { Text(s) },
-                                    onClick = {
-                                        onSizeChange(s)
-                                        showSizeDropdown = false
-                                    }
-                                )
-                            }
+                            )
                         }
                     }
+                }
 
-                    if (unit == "ft") {
-                        Spacer(modifier = Modifier.width(8.dp))
-                        BasicTextField(
-                            value = localFtInput,
-                            onValueChange = {
-                                localFtInput = it
-                                val newFt = it.toDoubleOrNull()
-                                onFtChange(newFt)
-                            },
-                            modifier = Modifier
-                                .width(60.dp)
-                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
-                                .padding(horizontal = 12.dp, vertical = 8.dp),
-                            textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                if (unit == "ft") {
+                    OutlinedTextField(
+                        value = localFtInput,
+                        onValueChange = { value ->
+                            val cleaned = value.filter { it.isDigit() || it == '.' }.take(7)
+                            localFtInput = cleaned
+                            onFtChange(cleaned.toDoubleOrNull())
+                        },
+                        modifier = Modifier.width(86.dp),
+                        singleLine = true,
+                        label = { Text("ft") },
+                        isError = !isAddEnabled,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        textStyle = LocalTextStyle.current.copy(color = MaterialTheme.colorScheme.onSurface),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
                         )
-                        Text("ft", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(start = 4.dp))
-                    }
+                    )
                 }
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                // Quantity Controls
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .background(
-                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                            RoundedCornerShape(12.dp)
-                        )
-                        .padding(horizontal = 4.dp, vertical = 2.dp)
-                ) {
-                    IconButton(
-                        onClick = { if (quantity > 1) onQuantityChange(quantity - 1) },
-                        modifier = Modifier.size(32.dp),
-                        enabled = quantity > 1
-                    ) {
-                        Icon(Icons.Default.Remove, contentDescription = "Decrease", tint = if (quantity > 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f))
-                    }
-
-                    Text(
-                        text = quantity.toString(),
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 8.dp),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    IconButton(
-                        onClick = { onQuantityChange(quantity + 1) },
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = "Increase", tint = MaterialTheme.colorScheme.primary)
-                    }
-                }
+                QuantityStepper(quantity = quantity, onQuantityChange = onQuantityChange)
 
                 Text(
                     text = unit,
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 8.dp)
+                    modifier = Modifier.padding(start = 2.dp)
                 )
             }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            val isAddEnabled = if (unit == "ft") ft != null && ft > 0 else true
 
             Button(
                 onClick = onAddClick,
@@ -218,24 +191,68 @@ fun MaterialItemCard(
                 enabled = isAddEnabled,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             ) {
-                Icon(
-                    imageVector = if (isAdded) Icons.Default.Check else Icons.Default.Add,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
+                Icon(if (isAdded) Icons.Default.Check else Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(if (isAdded) "Added to List ($inCartCount)" else "Add to List")
+                Text(if (isAdded) "Added to List ($inCartCount)" else "Add to List", fontWeight = FontWeight.SemiBold)
             }
         }
     }
 }
 
 @Composable
+private fun AddedChip(count: Int) {
+    Surface(
+        modifier = Modifier.padding(start = 8.dp),
+        color = MaterialTheme.colorScheme.primaryContainer,
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Text(
+            text = "Added: $count",
+            modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onPrimaryContainer,
+            fontWeight = FontWeight.SemiBold
+        )
+    }
+}
+
+@Composable
+fun QuantityStepper(quantity: Int, onQuantityChange: (Int) -> Unit, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+            .padding(horizontal = 2.dp, vertical = 1.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(onClick = { if (quantity > 1) onQuantityChange(quantity - 1) }, enabled = quantity > 1, modifier = Modifier.size(30.dp)) {
+            Icon(
+                Icons.Default.Remove,
+                contentDescription = "Decrease",
+                tint = if (quantity > 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f),
+                modifier = Modifier.size(17.dp)
+            )
+        }
+        Text(
+            text = quantity.coerceAtLeast(1).toString(),
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(horizontal = 8.dp)
+        )
+        IconButton(onClick = { onQuantityChange(quantity + 1) }, modifier = Modifier.size(30.dp)) {
+            Icon(Icons.Default.Add, contentDescription = "Increase", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(17.dp))
+        }
+    }
+}
+
+@Composable
 fun CategoryBadge(category: String) {
-    val color = when (category.uppercase()) {
+    val color = when (category.uppercase(Locale.getDefault())) {
         "CPVC" -> Color(0xFFFF9800)
         "UPVC" -> Color(0xFF2196F3)
         "SWR" -> Color(0xFF607D8B)
@@ -245,36 +262,17 @@ fun CategoryBadge(category: String) {
         else -> MaterialTheme.colorScheme.secondary
     }
 
-    Surface(
-        color = color.copy(alpha = 0.15f),
-        shape = RoundedCornerShape(8.dp),
-        modifier = Modifier.padding(start = 8.dp)
-    ) {
+    Surface(color = color.copy(alpha = 0.15f), shape = RoundedCornerShape(8.dp), modifier = Modifier.padding(start = 8.dp)) {
         Text(
             text = category,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
             style = MaterialTheme.typography.labelSmall,
-            color = if (category.uppercase() == "HDPE") MaterialTheme.colorScheme.onSurface else color,
-            fontWeight = FontWeight.Bold
+            color = if (category.uppercase(Locale.getDefault()) == "HDPE") MaterialTheme.colorScheme.onSurface else color,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1
         )
     }
 }
 
-@Composable
-fun BasicTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    modifier: Modifier = Modifier,
-    textStyle: androidx.compose.ui.text.TextStyle = LocalTextStyle.current,
-    keyboardOptions: KeyboardOptions = KeyboardOptions.Default
-) {
-    androidx.compose.foundation.text.BasicTextField(
-        value = value,
-        onValueChange = onValueChange,
-        modifier = modifier,
-        textStyle = textStyle,
-        keyboardOptions = keyboardOptions,
-        singleLine = true,
-        cursorBrush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.primary)
-    )
-}
+private fun formatNumber(value: Double): String =
+    if (value % 1.0 == 0.0) value.toInt().toString() else String.format(Locale.US, "%.2f", value).trimEnd('0').trimEnd('.')
