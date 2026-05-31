@@ -9,7 +9,7 @@ object SearchUtils {
      * - Item name
      * - Category
      * - Specific size mention (e.g. "1 inch")
-     * - Keywords (e.g. "bend", "suleshan")
+     * - Keywords (alias, group, system)
      */
     fun filterMaterials(materials: List<MaterialItem>, query: String): List<MaterialItem> {
         if (query.isBlank()) return materials
@@ -19,28 +19,20 @@ object SearchUtils {
 
         return materials.filter { item ->
             val name = item.name.lowercase()
-            val category = item.category.lowercase()
-            val keywords = item.searchKeywords
+            val alias = item.alias.lowercase()
+            val category = item.categoryName.lowercase()
+            val group = item.group.lowercase()
+            val system = item.system.lowercase()
 
             // Check if all query parts match something in the item
             parts.all { part ->
                 name.contains(part) ||
+                alias.contains(part) ||
                 category.contains(part) ||
-                keywords.any { it.contains(part) } ||
-                item.sizes.any { it.lowercase().contains(part) } ||
-                // Special mapping for common Indian variations
-                isIndianSynonymMatch(part, keywords)
+                group.contains(part) ||
+                system.contains(part) ||
+                item.sizes.any { it.lowercase().contains(part) }
             }
-        }
-    }
-
-    private fun isIndianSynonymMatch(part: String, keywords: List<String>): Boolean {
-        return when (part) {
-            "bend" -> keywords.contains("bend")
-            "suleshan", "solution", "bond", "glue" -> keywords.contains("solution") || keywords.contains("suleshan")
-            "jali", "trap", "trap cover" -> keywords.contains("jali") || keywords.contains("floor trap")
-            "tap", "faucet", "cock" -> keywords.contains("tap") || keywords.contains("bib cock")
-            else -> false
         }
     }
 }
