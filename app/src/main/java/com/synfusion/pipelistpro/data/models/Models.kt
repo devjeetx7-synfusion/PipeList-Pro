@@ -18,20 +18,23 @@ data class MaterialItem(
 data class CartItem(
     val id: String = java.util.UUID.randomUUID().toString(),
     val materialId: String = "",
-    val category: String,
-    @SerializedName(value = "name", alternate = ["materialName"]) val name: String,
-    val size: String,
-    val unit: String,
+    val category: String = "Tools/Other",
+    @SerializedName(value = "name", alternate = ["materialName"]) val name: String = "Material",
+    val size: String = "Standard",
+    val unit: String = "pcs",
     val ft: Double? = null,
-    val quantity: Int
+    val quantity: Int = 1
 ) : Parcelable
 
 @Parcelize
 data class Project(
-    val id: String,
-    val projectName: String,
-    val clientName: String,
-    val location: String,
-    val date: String,
-    val items: MutableList<CartItem> = mutableListOf()
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val projectName: String = "Material List",
+    val clientName: String = "",
+    val location: String = "",
+    val date: String = "",
+    val notes: String = "",
+    val items: List<CartItem> = emptyList()
 ) : Parcelable
+
+enum class ThemeMode { SYSTEM, LIGHT, DARK }

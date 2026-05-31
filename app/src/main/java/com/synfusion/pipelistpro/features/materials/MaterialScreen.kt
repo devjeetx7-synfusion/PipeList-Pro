@@ -21,7 +21,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.synfusion.pipelistpro.data.repository.MaterialCatalog
 import com.synfusion.pipelistpro.data.models.CartItem
 import com.synfusion.pipelistpro.ui.components.MaterialCategoryChip
 import com.synfusion.pipelistpro.ui.components.MaterialItemCard
@@ -37,6 +36,7 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("UPVC") }
     var showCartSheet by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { viewModel.ensureProjectStarted() }
 
     val categories = listOf("UPVC", "CPVC", "PVC", "SWR", "GI", "HDPE", "Tools/Other")
 
@@ -130,7 +130,7 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
             }
 
             // Material List
-            val filteredMaterials = if (searchQuery.isEmpty()) {
+            val filteredMaterials = if (searchQuery.isBlank()) {
                 searchResults.filter { it.category == selectedCategory }
             } else {
                 searchResults
@@ -144,7 +144,6 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                 ) {
                 items(filteredMaterials, key = { it.id }) { material ->
                     val materialState = viewModel.getMaterialState(material.id, material.sizes.first())
-
                     val itemsInCart = currentProject?.items?.filter {
                         it.name == material.name && it.category == material.category
                     } ?: emptyList()
@@ -164,7 +163,7 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                         onFtChange = { viewModel.updateMaterialFt(material.id, it) },
                         onQuantityChange = { viewModel.updateMaterialQuantity(material.id, it) },
                         onAddClick = {
-                            val finalFt = if (material.unit == "ft") materialState.ft else null
+                            val finalFt = if (material.unit == "ft") materialState.ft ?: 1.0 else null
                             viewModel.addItemToCurrentProject(
                                 CartItem(
                                     materialId = material.id,
@@ -180,9 +179,7 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                     )
                 }
 
-                    item {
-                        Spacer(modifier = Modifier.height(100.dp))
-                    }
+                    item { Spacer(modifier = Modifier.height(80.dp)) }
                 }
 
                 // Mini Cart Bar
@@ -195,7 +192,7 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                             .fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
                         color = MaterialTheme.colorScheme.primary,
-                        shadowElevation = 8.dp,
+                        shadowElevation = 5.dp,
                         onClick = { showCartSheet = true }
                     ) {
                         Row(
@@ -296,11 +293,8 @@ fun SelectedItemsBottomSheet(
                         items(items) { item ->
                             CartItemCard(
                                 item = item,
-                                onQuantityChange = { newQty ->
-                                    if (newQty == 0) viewModel.updateCartItemQuantity(item.id, 0)
-                                    else viewModel.updateCartItemQuantity(item.id, newQty)
-                                },
-                                onRemove = { viewModel.updateCartItemQuantity(item.id, 0) }
+                                onQuantityChange = { newQty -> viewModel.updateCartItemQuantity(item.id, newQty) },
+                                onRemove = { viewModel.removeCartItem(item.id) }
                             )
                         }
                     }
