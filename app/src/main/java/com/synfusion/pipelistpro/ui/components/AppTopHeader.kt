@@ -8,7 +8,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.synfusion.pipelistpro.core.theme.SlateGraySubtitle
 
 @Composable
 fun AppTopHeader(
@@ -49,7 +48,7 @@ fun AppTopHeader(
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodyMedium,
-                color = SlateGraySubtitle
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
