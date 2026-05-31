@@ -12,6 +12,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
+import kotlinx.coroutines.launch
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.collectAsState
@@ -37,6 +38,10 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("UPVC") }
     var showCartSheet by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) { viewModel.ensureProjectStarted() }
 
     val categories = listOf("UPVC", "CPVC", "PVC", "SWR", "GI", "HDPE", "Tools/Other")
 
@@ -51,6 +56,7 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
 
     Scaffold(
         contentWindowInsets = WindowInsets.safeDrawing,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Add Materials", fontWeight = FontWeight.Bold) },
@@ -130,10 +136,10 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
             }
 
             // Material List
-            val filteredMaterials = if (searchQuery.isEmpty()) {
+            val filteredMaterials = if (searchQuery.isBlank()) {
                 searchResults.filter { it.category == selectedCategory }
             } else {
-                searchResults
+                searchResults.filter { material -> material.category == selectedCategory || searchQuery.isNotBlank() }
             }
 
             Box(modifier = Modifier.weight(1f)) {
@@ -176,6 +182,7 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                                     ft = finalFt
                                 )
                             )
+                            scope.launch { snackbarHostState.showSnackbar("${material.name} added", withDismissAction = true) }
                         }
                     )
                 }
@@ -296,11 +303,8 @@ fun SelectedItemsBottomSheet(
                         items(items) { item ->
                             CartItemCard(
                                 item = item,
-                                onQuantityChange = { newQty ->
-                                    if (newQty == 0) viewModel.updateCartItemQuantity(item.id, 0)
-                                    else viewModel.updateCartItemQuantity(item.id, newQty)
-                                },
-                                onRemove = { viewModel.updateCartItemQuantity(item.id, 0) }
+                                onQuantityChange = { newQty -> viewModel.updateCartItemQuantity(item.id, newQty) },
+                                onRemove = { viewModel.removeCartItem(item.id) }
                             )
                         }
                     }

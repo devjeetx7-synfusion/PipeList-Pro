@@ -43,8 +43,13 @@ import androidx.compose.ui.text.style.TextOverflow
 fun CartItemCard(
     item: com.synfusion.pipelistpro.data.models.CartItem,
     onQuantityChange: (Int) -> Unit,
-    onRemove: () -> Unit
+    onRemove: () -> Unit,
+    onUpdateDetails: (String, Double?, String) -> Unit = { _, _, _ -> }
 ) {
+    var editExpanded by remember(item.id) { mutableStateOf(false) }
+    var editSize by remember(item.id, item.size) { mutableStateOf(item.size) }
+    var editFt by remember(item.id, item.ft) { mutableStateOf(item.ft?.toString().orEmpty()) }
+    var editUnit by remember(item.id, item.unit) { mutableStateOf(item.unit) }
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -85,8 +90,8 @@ fun CartItemCard(
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                val metaText = if (item.unit == "ft" || item.ft != null) {
-                    val ftDisplay = if (item.ft?.rem(1.0) == 0.0) item.ft.toInt().toString() else item.ft.toString()
+                val metaText = if (item.ft != null) {
+                    val ftDisplay = if (item.ft.rem(1.0) == 0.0) item.ft.toInt().toString() else item.ft.toString()
                     "${item.size} • $ftDisplay ft • ${item.category}"
                 } else {
                     "${item.size} • ${item.category}"
@@ -136,13 +141,50 @@ fun CartItemCard(
                 }
             }
 
-            val unitLabel = if (item.unit == "ft" || item.ft != null) "ft" else "pcs"
-            Text(
-                text = unitLabel,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 8.dp).width(28.dp)
-            )
+            IconButton(onClick = { editExpanded = !editExpanded }, modifier = Modifier.size(36.dp)) {
+                Icon(Icons.Default.Edit, contentDescription = "Edit item", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+            }
+        }
+
+        if (editExpanded) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = editSize,
+                        onValueChange = { editSize = it },
+                        modifier = Modifier.weight(1f),
+                        label = { Text("Size") },
+                        singleLine = true
+                    )
+                    OutlinedTextField(
+                        value = editUnit,
+                        onValueChange = { editUnit = it },
+                        modifier = Modifier.weight(1f),
+                        label = { Text("Unit") },
+                        singleLine = true
+                    )
+                }
+                OutlinedTextField(
+                    value = editFt,
+                    onValueChange = { value -> editFt = value.filter { it.isDigit() || it == '.' }.take(8) },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Length/ft (optional)") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                )
+                Button(
+                    onClick = {
+                        onUpdateDetails(editSize, editFt.toDoubleOrNull(), editUnit)
+                        editExpanded = false
+                    },
+                    modifier = Modifier.align(Alignment.End)
+                ) { Text("Apply") }
+            }
         }
     }
 }
@@ -252,12 +294,45 @@ fun ActionChip(
 }
 
 @Composable
+private fun ProjectDetailsEditor(
+    projectName: String,
+    notes: String,
+    onChange: (String, String) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        OutlinedTextField(
+            value = projectName,
+            onValueChange = { onChange(it, notes) },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("List name") },
+            singleLine = true,
+            shape = RoundedCornerShape(16.dp)
+        )
+        OutlinedTextField(
+            value = notes,
+            onValueChange = { onChange(projectName, it) },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("Notes (optional)") },
+            minLines = 1,
+            maxLines = 3,
+            shape = RoundedCornerShape(16.dp)
+        )
+    }
+}
+
+@Composable
 fun ProjectListScreen(viewModel: com.synfusion.pipelistpro.features.cart.ProjectViewModel, navController: NavController) {
     val currentProject by viewModel.currentProject.collectAsState()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var isExporting by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     Scaffold(
         contentWindowInsets = WindowInsets.safeDrawing,
@@ -280,8 +355,8 @@ fun ProjectListScreen(viewModel: com.synfusion.pipelistpro.features.cart.Project
                         currentProject?.let { project ->
                             scope.launch {
                                 isExporting = true
-                                com.synfusion.pipelistpro.core.export.PdfExportManager.generatePdf(navController.context, project)?.let { file ->
-                                    com.synfusion.pipelistpro.core.export.ShareManager.shareFile(navController.context, file, "application/pdf", "Share PDF")
+                                com.synfusion.pipelistpro.core.export.PdfExportManager.generatePdf(context, project)?.let { file ->
+                                    com.synfusion.pipelistpro.core.export.ShareManager.shareFile(context, file, "application/pdf", "Share PDF")
                                 } ?: snackbarHostState.showSnackbar("Failed to generate PDF")
                                 isExporting = false
                             }
@@ -292,8 +367,8 @@ fun ProjectListScreen(viewModel: com.synfusion.pipelistpro.features.cart.Project
                         currentProject?.let { project ->
                             scope.launch {
                                 isExporting = true
-                                com.synfusion.pipelistpro.core.export.ImageExportManager.generateImage(navController.context, project)?.let { file ->
-                                    com.synfusion.pipelistpro.core.export.ShareManager.shareFile(navController.context, file, "image/png", "Share Image")
+                                com.synfusion.pipelistpro.core.export.ImageExportManager.generateImage(context, project)?.let { file ->
+                                    com.synfusion.pipelistpro.core.export.ShareManager.shareFile(context, file, "image/png", "Share Image")
                                 } ?: snackbarHostState.showSnackbar("Failed to generate Image")
                                 isExporting = false
                             }
@@ -301,7 +376,7 @@ fun ProjectListScreen(viewModel: com.synfusion.pipelistpro.features.cart.Project
                     },
                     onText = {
                         currentProject?.let { project ->
-                            com.synfusion.pipelistpro.core.export.ShareManager.shareText(navController.context, project)
+                            com.synfusion.pipelistpro.core.export.ShareManager.shareText(context, project)
                         }
                     }
                 )
@@ -320,6 +395,14 @@ fun ProjectListScreen(viewModel: com.synfusion.pipelistpro.features.cart.Project
                 navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
                 onNavigationClick = { navController.popBackStack() }
             )
+
+            currentProject?.let { project ->
+                ProjectDetailsEditor(
+                    projectName = project.projectName,
+                    notes = project.notes,
+                    onChange = { name, notes -> viewModel.updateProjectDetails(name, notes) }
+                )
+            }
 
             if (currentProject == null || currentProject!!.items.isEmpty()) {
                 EmptyStateCard(
@@ -367,7 +450,8 @@ fun ProjectListScreen(viewModel: com.synfusion.pipelistpro.features.cart.Project
                                 onQuantityChange = { newQty ->
                                     viewModel.updateCartItemQuantity(item.id, newQty)
                                 },
-                                onRemove = { handleRemove() }
+                                onRemove = { handleRemove() },
+                                onUpdateDetails = { size, ft, unit -> viewModel.updateCartItem(item.id, size, ft, unit) }
                             )
                         }
                     }

@@ -6,7 +6,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.synfusion.pipelistpro.core.theme.SlateGraySubtitle
 
 @Composable
 fun ProjectSummaryCard(
@@ -42,7 +41,7 @@ fun ProjectSummaryCard(
                 Text(
                     text = date,
                     style = MaterialTheme.typography.labelMedium,
-                    color = SlateGraySubtitle
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             Spacer(modifier = Modifier.height(8.dp))

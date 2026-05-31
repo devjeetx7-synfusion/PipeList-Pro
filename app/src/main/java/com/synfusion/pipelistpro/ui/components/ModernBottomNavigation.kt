@@ -51,8 +51,8 @@ fun ModernBottomNavigation(
                 .height(64.dp),
             color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
             shape = RoundedCornerShape(32.dp),
-            shadowElevation = 16.dp,
-            tonalElevation = 8.dp
+            shadowElevation = 6.dp,
+            tonalElevation = 2.dp
         ) {
             Row(
                 modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
@@ -84,8 +84,8 @@ fun ModernBottomNavigation(
                 .size(56.dp)
                 .offset(y = (-32).dp),
             elevation = FloatingActionButtonDefaults.elevation(
-                defaultElevation = 8.dp,
-                pressedElevation = 12.dp
+                defaultElevation = 4.dp,
+                pressedElevation = 6.dp
             )
         ) {
             Icon(

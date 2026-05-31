@@ -177,9 +177,10 @@ fun MaterialItemCard(
                 ) {
                     IconButton(
                         onClick = { if (quantity > 1) onQuantityChange(quantity - 1) },
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(32.dp),
+                        enabled = quantity > 1
                     ) {
-                        Icon(Icons.Default.Remove, contentDescription = "Decrease", tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Default.Remove, contentDescription = "Decrease", tint = if (quantity > 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f))
                     }
 
                     Text(
@@ -240,7 +241,7 @@ fun CategoryBadge(category: String) {
         "SWR" -> Color(0xFF607D8B)
         "PVC" -> Color(0xFF4CAF50)
         "GI" -> Color(0xFF795548)
-        "HDPE" -> Color(0xFF000000)
+        "HDPE" -> Color(0xFF0F766E)
         else -> MaterialTheme.colorScheme.secondary
     }
 
@@ -253,7 +254,7 @@ fun CategoryBadge(category: String) {
             text = category,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
             style = MaterialTheme.typography.labelSmall,
-            color = color,
+            color = if (category.uppercase() == "HDPE") MaterialTheme.colorScheme.onSurface else color,
             fontWeight = FontWeight.Bold
         )
     }

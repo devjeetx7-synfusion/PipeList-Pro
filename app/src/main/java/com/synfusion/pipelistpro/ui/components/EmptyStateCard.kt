@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.synfusion.pipelistpro.core.theme.SlateGraySubtitle
 
 @Composable
 fun EmptyStateCard(
@@ -34,7 +33,7 @@ fun EmptyStateCard(
         Text(
             text = message,
             style = MaterialTheme.typography.bodyLarge,
-            color = SlateGraySubtitle
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
