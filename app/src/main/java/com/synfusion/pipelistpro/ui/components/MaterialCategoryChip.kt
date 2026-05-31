@@ -23,8 +23,8 @@ fun MaterialCategoryChip(
             .clickable(onClick = onClick),
         color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(16.dp),
-        shadowElevation = if (isSelected) 4.dp else 1.dp,
-        tonalElevation = if (isSelected) 4.dp else 0.dp
+        shadowElevation = 0.dp,
+        tonalElevation = if (isSelected) 2.dp else 0.dp
     ) {
         Box(
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
