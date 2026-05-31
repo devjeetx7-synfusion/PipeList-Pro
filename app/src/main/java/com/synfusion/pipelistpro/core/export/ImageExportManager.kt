@@ -5,123 +5,150 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.RectF
+import com.synfusion.pipelistpro.data.models.CartItem
 import com.synfusion.pipelistpro.data.models.Project
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 object ImageExportManager {
-
     private const val WIDTH = 1080
     private const val MARGIN = 60f
-    private const val MAX_HEIGHT = 8000 // To prevent OOM
+    private const val MAX_HEIGHT = 12000
 
     suspend fun generateImage(context: Context, project: Project): File? = withContext(Dispatchers.IO) {
+        if (project.items.isEmpty()) return@withContext null
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-        val groupedItems = project.items.groupBy { it.category }
-
-        // Calculate dynamic height
-        var totalHeight = 300f // Header
-        groupedItems.forEach { (_, items) ->
-            totalHeight += 80f // Category header
-            totalHeight += items.size * 60f // Rows
-            totalHeight += 40f // Spacing
-        }
-        totalHeight += 100f // Footer
-
-        val finalHeight = totalHeight.toInt().coerceAtMost(MAX_HEIGHT)
-
         try {
+            val grouped = project.items.groupBy { it.category.ifBlank { "Other" } }.toSortedMap()
+            var height = 260f + if (project.notes.isBlank()) 0f else 70f
+            grouped.forEach { (_, items) ->
+                height += 76f
+                items.forEach { item -> height += estimateRowHeight(paint, item) }
+            }
+            height += 110f
+            val finalHeight = height.toInt().coerceIn(720, MAX_HEIGHT)
             val bitmap = Bitmap.createBitmap(WIDTH, finalHeight, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(bitmap)
-            canvas.drawColor(Color.WHITE)
+            canvas.drawColor(Color.rgb(248, 250, 252))
 
-            var y = 100f
-
-            // Header
-            paint.textSize = 48f
+            var y = 92f
+            paint.textAlign = Paint.Align.LEFT
+            paint.textSize = 52f
             paint.isFakeBoldText = true
-            paint.color = Color.BLACK
+            paint.color = Color.rgb(0, 87, 217)
             canvas.drawText("PipeList Pro", MARGIN, y, paint)
 
-            y += 60f
-            paint.textSize = 28f
+            y += 54f
+            paint.textSize = 34f
+            paint.color = Color.rgb(17, 24, 39)
+            wrapText(paint, project.projectName.ifBlank { "Material List" }, WIDTH - MARGIN * 2, 34f).take(2).forEach { line ->
+                canvas.drawText(line, MARGIN, y, paint)
+                y += 42f
+            }
+            paint.textSize = 22f
             paint.isFakeBoldText = false
-            paint.color = Color.DKGRAY
-            canvas.drawText(project.projectName, MARGIN, y, paint)
+            paint.color = Color.rgb(100, 116, 139)
+            canvas.drawText("Date: ${project.date.ifBlank { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date()) }}", MARGIN, y, paint)
+            y += 36f
+            if (project.notes.isNotBlank()) {
+                wrapText(paint, "Notes: ${project.notes}", WIDTH - MARGIN * 2, 22f).take(2).forEach { line ->
+                    canvas.drawText(line, MARGIN, y, paint)
+                    y += 30f
+                }
+            }
+            y += 18f
 
-            y += 40f
-            paint.textSize = 20f
-            canvas.drawText("Date: ${project.date}", MARGIN, y, paint)
-
-            y += 30f
-            paint.strokeWidth = 3f
-            paint.color = Color.BLACK
-            canvas.drawLine(MARGIN, y, WIDTH - MARGIN, y, paint)
-
-            y += 80f
-
-            // Content
-            groupedItems.forEach { (category, items) ->
-                if (y > finalHeight - 150f) return@forEach // Prevent drawing out of bounds
-
-                paint.textSize = 32f
+            grouped.forEach { (category, items) ->
+                if (y > finalHeight - 160f) return@forEach
+                paint.color = Color.rgb(235, 242, 255)
+                canvas.drawRoundRect(RectF(MARGIN, y - 34f, WIDTH - MARGIN, y + 22f), 22f, 22f, paint)
+                paint.textSize = 28f
                 paint.isFakeBoldText = true
-                paint.color = Color.rgb(0, 87, 217) // Primary Blue
-                canvas.drawText(category.uppercase(), MARGIN, y, paint)
-
-                y += 15f
-                paint.strokeWidth = 2f
-                paint.color = Color.LTGRAY
-                canvas.drawLine(MARGIN, y, WIDTH - MARGIN, y, paint)
-                y += 60f
+                paint.color = Color.rgb(0, 87, 217)
+                canvas.drawText(category.uppercase(Locale.getDefault()), MARGIN + 22f, y + 4f, paint)
+                y += 76f
 
                 items.forEachIndexed { index, item ->
-                    if (y > finalHeight - 100f) return@forEachIndexed
-
-                    paint.textSize = 26f
-                    paint.isFakeBoldText = false
-                    paint.color = Color.BLACK
-
-                    val sizeStr = if (item.size != "Standard" && item.size.isNotEmpty()) "${item.size} " else ""
-                    val ftStr = if (item.ft != null) " (${item.ft} ft) " else ""
-                    val itemText = "${index + 1}. $sizeStr${item.name}$ftStr"
-                    val qtyText = "${item.quantity} ${item.unit}"
-
-                    canvas.drawText(itemText, MARGIN + 20f, y, paint)
-
-                    paint.textAlign = Paint.Align.RIGHT
-                    canvas.drawText(qtyText, WIDTH - MARGIN, y, paint)
-                    paint.textAlign = Paint.Align.LEFT
-
-                    y += 60f
+                    if (y > finalHeight - 120f) return@forEachIndexed
+                    y = drawImageRow(canvas, paint, item, index + 1, y)
                 }
                 y += 20f
             }
 
-            // Footer
-            y = finalHeight - 50f
-            paint.textSize = 20f
-            paint.color = Color.GRAY
             paint.textAlign = Paint.Align.CENTER
-            canvas.drawText("Generated by PipeList Pro", WIDTH / 2f, y, paint)
+            paint.textSize = 22f
+            paint.isFakeBoldText = false
+            paint.color = Color.rgb(100, 116, 139)
+            canvas.drawText("Generated by PipeList Pro", WIDTH / 2f, finalHeight - 48f, paint)
 
-            val exportDir = File(context.cacheDir, "exports")
-            if (!exportDir.exists()) exportDir.mkdirs()
-
-            val fileName = "PipeList_${project.projectName.replace(" ", "_")}_${System.currentTimeMillis()}.png"
-            val file = File(exportDir, fileName)
-
-            val out = FileOutputStream(file)
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
-            out.flush()
-            out.close()
-
+            val exportDir = File(context.cacheDir, "exports").apply { mkdirs() }
+            val file = File(exportDir, "PipeList_${safeFileName(project.projectName)}_${System.currentTimeMillis()}.png")
+            FileOutputStream(file).use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+            bitmap.recycle()
             file
         } catch (e: Exception) {
             e.printStackTrace()
             null
         }
     }
+
+    private fun drawImageRow(canvas: Canvas, paint: Paint, item: CartItem, index: Int, y: Float): Float {
+        val name = buildString {
+            append(index).append(". ")
+            if (item.size.isNotBlank() && item.size != "Standard") append(item.size).append(' ')
+            append(item.name)
+        }
+        val lines = wrapText(paint, name, 690f, 26f).take(3)
+        val rowHeight = (lines.size * 34f + 34f).coerceAtLeast(72f)
+        paint.color = Color.WHITE
+        canvas.drawRoundRect(RectF(MARGIN, y - 34f, WIDTH - MARGIN, y - 34f + rowHeight), 18f, 18f, paint)
+        paint.textAlign = Paint.Align.LEFT
+        paint.textSize = 26f
+        paint.isFakeBoldText = false
+        paint.color = Color.rgb(17, 24, 39)
+        var lineY = y
+        lines.forEach { line ->
+            canvas.drawText(line, MARGIN + 24f, lineY, paint)
+            lineY += 34f
+        }
+        paint.textSize = 22f
+        paint.color = Color.rgb(100, 116, 139)
+        val meta = item.ft?.let { formatNumber(it) + " ft" }.orEmpty()
+        if (meta.isNotBlank()) canvas.drawText(meta, MARGIN + 24f, lineY, paint)
+        paint.textAlign = Paint.Align.RIGHT
+        paint.textSize = 28f
+        paint.isFakeBoldText = true
+        paint.color = Color.rgb(0, 87, 217)
+        canvas.drawText("${item.quantity} ${item.unit}", WIDTH - MARGIN - 24f, y, paint)
+        return y - 34f + rowHeight + 18f
+    }
+
+    private fun estimateRowHeight(paint: Paint, item: CartItem): Float {
+        val lines = wrapText(paint, item.name, 690f, 26f).size.coerceAtMost(3)
+        return (lines * 34f + 52f).coerceAtLeast(90f)
+    }
+
+    private fun wrapText(paint: Paint, text: String, maxWidth: Float, textSize: Float): List<String> {
+        paint.textSize = textSize
+        val lines = mutableListOf<String>()
+        var current = ""
+        text.split(Regex("\\s+")).filter { it.isNotBlank() }.forEach { word ->
+            val candidate = if (current.isBlank()) word else "$current $word"
+            if (paint.measureText(candidate) <= maxWidth) current = candidate else {
+                if (current.isNotBlank()) lines.add(current)
+                current = word
+            }
+        }
+        if (current.isNotBlank()) lines.add(current)
+        return lines.ifEmpty { listOf("") }
+    }
+
+    private fun formatNumber(value: Double): String = if (value % 1.0 == 0.0) value.toInt().toString() else String.format(Locale.US, "%.2f", value).trimEnd('0').trimEnd('.')
+    private fun safeFileName(name: String): String = name.ifBlank { "Material_List" }.replace(Regex("[^A-Za-z0-9_-]+"), "_").take(48)
 }
