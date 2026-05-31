@@ -153,12 +153,8 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                 ) {
                 items(filteredMaterials, key = { it.id }) { material ->
                     val materialState = viewModel.getMaterialState(material.id, material.sizes.first())
-                    val effectiveFt = if (material.unit == "ft") materialState.ft ?: 1.0 else null
-                    val matchingItems = currentProject?.items?.filter {
-                        it.materialId == material.id &&
-                            it.size.equals(materialState.size, ignoreCase = true) &&
-                            it.unit.equals(material.unit, ignoreCase = true) &&
-                            ((it.ft == null && effectiveFt == null) || (it.ft != null && effectiveFt != null && kotlin.math.abs(it.ft - effectiveFt) < 0.001))
+                    val itemsInCart = currentProject?.items?.filter {
+                        it.name == material.name && it.category == material.category
                     } ?: emptyList()
 
                     val totalQtyInCart = matchingItems.sumOf { it.quantity }
@@ -189,6 +185,7 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                         },
                         onAddClick = {
                             val finalFt = if (material.unit == "ft") effectiveFt else null
+                            val finalFt = if (material.unit == "ft") materialState.ft ?: 1.0 else null
                             viewModel.addItemToCurrentProject(
                                 CartItem(
                                     materialId = material.id,
@@ -204,6 +201,7 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                     )
                 }
 
+                    item { Spacer(modifier = Modifier.height(80.dp)) }
                 }
 
                 // Mini Cart Bar
