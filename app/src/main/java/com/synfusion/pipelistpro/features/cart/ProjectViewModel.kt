@@ -134,6 +134,90 @@ class ProjectViewModel(application: Application) : AndroidViewModel(application)
         setCurrentProject(project.copy(items = remaining))
     }
 
+
+    fun updateSelectedMaterialLine(
+        materialId: String,
+        name: String,
+        category: String,
+        size: String,
+        unit: String,
+        ft: Double?,
+        quantity: Int
+    ) {
+        val project = _currentProject.value ?: return
+        val safeQuantity = quantity.coerceAtLeast(1)
+        val candidate = CartItem(
+            materialId = materialId,
+            name = name,
+            category = category,
+            size = size.ifBlank { "Standard" },
+            unit = unit.ifBlank { "pcs" },
+            ft = ft?.takeIf { it > 0.0 },
+            quantity = safeQuantity
+        )
+        val updatedItems = project.items.toMutableList()
+        val exactIndex = updatedItems.indexOfFirst { it.isSameLineAs(candidate) }
+        if (exactIndex >= 0) {
+            updatedItems[exactIndex] = updatedItems[exactIndex].copy(quantity = safeQuantity)
+            setCurrentProject(project.copy(items = updatedItems))
+            return
+        }
+
+        val sameMaterialIndexes = updatedItems.withIndex()
+            .filter { (_, item) ->
+                item.materialId == materialId ||
+                    (item.name.equals(name, ignoreCase = true) && item.category.equals(category, ignoreCase = true))
+            }
+            .map { it.index }
+
+        if (sameMaterialIndexes.size == 1) {
+            val targetIndex = sameMaterialIndexes.first()
+            val edited = updatedItems[targetIndex].copy(
+                size = candidate.size,
+                unit = candidate.unit,
+                ft = candidate.ft,
+                quantity = safeQuantity
+            )
+            updatedItems.removeAt(targetIndex)
+            val mergeIndex = updatedItems.indexOfFirst { it.isSameLineAs(edited) }
+            if (mergeIndex >= 0) {
+                updatedItems[mergeIndex] = updatedItems[mergeIndex].copy(quantity = edited.quantity)
+            } else {
+                updatedItems.add(targetIndex.coerceAtMost(updatedItems.size), edited)
+            }
+            setCurrentProject(project.copy(items = updatedItems))
+    }
+
+    fun ensureProjectStarted() {
+        if (_currentProject.value == null) startNewProject()
+    }
+
+    fun loadProject(project: Project) {
+        setCurrentProject(project.copy(items = project.items.map { it.copy(quantity = it.quantity.coerceAtLeast(1)) }))
+        materialStates.clear()
+    }
+
+    fun updateProjectDetails(projectName: String, notes: String) {
+        val project = _currentProject.value ?: return
+        val safeName = projectName.trim().ifBlank { "Material List - ${project.date.ifBlank { currentDate() }}" }
+        setCurrentProject(project.copy(projectName = safeName, notes = notes.trim()))
+    }
+
+    fun addItemToCurrentProject(item: CartItem) {
+        ensureProjectStarted()
+        val project = _currentProject.value ?: return
+        val safeItem = item.copy(quantity = item.quantity.coerceAtLeast(1), ft = item.ft?.takeIf { it > 0.0 })
+        val updatedItems = project.items.toMutableList()
+        val existingIndex = updatedItems.indexOfFirst { it.isSameLineAs(safeItem) }
+        if (existingIndex != -1) {
+            val existingItem = updatedItems[existingIndex]
+            updatedItems[existingIndex] = existingItem.copy(quantity = existingItem.quantity + safeItem.quantity)
+        } else {
+            updatedItems.add(safeItem)
+        }
+        setCurrentProject(project.copy(items = updatedItems))
+    }
+
     fun removeCartItem(cartItemId: String) {
         val project = _currentProject.value ?: return
         setCurrentProject(project.copy(items = project.items.filterNot { it.id == cartItemId }))

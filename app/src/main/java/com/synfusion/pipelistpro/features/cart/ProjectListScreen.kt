@@ -2,6 +2,7 @@ package com.synfusion.pipelistpro.features.cart
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -273,6 +274,7 @@ fun ProjectListScreen(viewModel: ProjectViewModel, navController: NavController)
     val scope = rememberCoroutineScope()
     var isExporting by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
 
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -287,6 +289,13 @@ fun ProjectListScreen(viewModel: ProjectViewModel, navController: NavController)
                     Column {
                         Text("Material List", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, maxLines = 1)
                         Text(currentProject?.date.orEmpty(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                    }
+                },
+                actions = {
+                    TextButton(onClick = { navController.navigate("material") }) {
+                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Add")
                     }
                 }
             )
@@ -337,6 +346,7 @@ fun ProjectListScreen(viewModel: ProjectViewModel, navController: NavController)
                     .fillMaxSize()
                     .padding(paddingValues)
                     .background(MaterialTheme.colorScheme.background)
+                    .pointerInput(Unit) { detectTapGestures(onTap = { focusManager.clearFocus() }) }
                     .padding(20.dp)
             ) {
                 EmptyStateCard(message = "Your list is empty. Add materials to get started!", modifier = Modifier.weight(1f))
@@ -347,7 +357,8 @@ fun ProjectListScreen(viewModel: ProjectViewModel, navController: NavController)
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .background(MaterialTheme.colorScheme.background),
+                    .background(MaterialTheme.colorScheme.background)
+                    .pointerInput(Unit) { detectTapGestures(onTap = { focusManager.clearFocus() }) },
                 contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {

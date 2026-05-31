@@ -64,7 +64,7 @@ fun MaterialItemCard(
     modifier: Modifier = Modifier
 ) {
     var showSizeDropdown by remember { mutableStateOf(false) }
-    var localFtInput by remember(ft, unit) { mutableStateOf(if (unit == "ft") formatNumber(ft ?: 1.0) else "") }
+    var localFtInput by remember(unit, name) { mutableStateOf(if (unit == "ft") formatNumber(ft ?: 1.0) else "") }
     val isAdded = inCartCount > 0
     val effectiveFt = if (unit == "ft") localFtInput.toDoubleOrNull() else null
     val isAddEnabled = quantity >= 1 && (unit != "ft" || (effectiveFt != null && effectiveFt > 0.0))

@@ -1,6 +1,7 @@
 package com.synfusion.pipelistpro.features.materials
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,8 +17,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -36,6 +38,7 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("UPVC") }
     var showCartSheet by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
     LaunchedEffect(Unit) { viewModel.ensureProjectStarted() }
 
     val categories = listOf("UPVC", "CPVC", "PVC", "SWR", "GI", "HDPE", "Tools/Other")
@@ -88,9 +91,10 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                 .fillMaxSize()
                 .padding(padding)
                 .background(MaterialTheme.colorScheme.background)
+                .pointerInput(Unit) { detectTapGestures(onTap = { focusManager.clearFocus() }) }
         ) {
             // Search Bar
-            TextField(
+            OutlinedTextField(
                 value = searchQuery,
                 onValueChange = {
                     searchQuery = it
@@ -101,14 +105,14 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 placeholder = { Text("Search materials...") },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                shape = RoundedCornerShape(24.dp),
+                shape = RoundedCornerShape(22.dp),
                 singleLine = true,
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f),
+                    cursorColor = MaterialTheme.colorScheme.primary
                 )
             )
 
@@ -138,8 +142,13 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
 
             Box(modifier = Modifier.weight(1f)) {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    modifier = Modifier.fillMaxSize().imePadding(),
+                    contentPadding = PaddingValues(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = 8.dp,
+                        bottom = if ((currentProject?.items?.size ?: 0) > 0) 112.dp else 20.dp
+                    ),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                 items(filteredMaterials, key = { it.id }) { material ->
@@ -148,7 +157,8 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                         it.name == material.name && it.category == material.category
                     } ?: emptyList()
 
-                    val totalQtyInCart = itemsInCart.sumOf { it.quantity }
+                    val totalQtyInCart = matchingItems.sumOf { it.quantity }
+                    val displayedQuantity = totalQtyInCart.takeIf { it > 0 } ?: materialState.quantity
 
                     MaterialItemCard(
                         name = material.name,
@@ -157,12 +167,24 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                         sizes = material.sizes,
                         unit = material.unit,
                         ft = materialState.ft,
-                        quantity = materialState.quantity,
+                        quantity = displayedQuantity,
                         inCartCount = totalQtyInCart,
-                        onSizeChange = { viewModel.updateMaterialSize(material.id, it) },
-                        onFtChange = { viewModel.updateMaterialFt(material.id, it) },
-                        onQuantityChange = { viewModel.updateMaterialQuantity(material.id, it) },
+                        onSizeChange = { newSize ->
+                            viewModel.updateMaterialSize(material.id, newSize)
+                            viewModel.updateSelectedMaterialLine(material.id, material.name, material.category, newSize, material.unit, effectiveFt, displayedQuantity)
+                        },
+                        onFtChange = { newFt ->
+                            viewModel.updateMaterialFt(material.id, newFt)
+                            if (newFt != null && newFt > 0.0) {
+                                viewModel.updateSelectedMaterialLine(material.id, material.name, material.category, materialState.size, material.unit, newFt, displayedQuantity)
+                            }
+                        },
+                        onQuantityChange = { newQuantity ->
+                            viewModel.updateMaterialQuantity(material.id, newQuantity)
+                            viewModel.updateSelectedMaterialLine(material.id, material.name, material.category, materialState.size, material.unit, effectiveFt, newQuantity)
+                        },
                         onAddClick = {
+                            val finalFt = if (material.unit == "ft") effectiveFt else null
                             val finalFt = if (material.unit == "ft") materialState.ft ?: 1.0 else null
                             viewModel.addItemToCurrentProject(
                                 CartItem(
@@ -170,7 +192,7 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                                     name = material.name,
                                     category = material.category,
                                     size = materialState.size,
-                                    quantity = materialState.quantity,
+                                    quantity = displayedQuantity,
                                     unit = material.unit,
                                     ft = finalFt
                                 )
@@ -188,7 +210,9 @@ fun MaterialScreen(viewModel: ProjectViewModel, navController: NavController) {
                     Surface(
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
-                            .padding(16.dp)
+                            .imePadding()
+                            .navigationBarsPadding()
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
                             .fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
                         color = MaterialTheme.colorScheme.primary,
