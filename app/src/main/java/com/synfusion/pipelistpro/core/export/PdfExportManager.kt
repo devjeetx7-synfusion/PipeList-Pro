@@ -5,7 +5,6 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.pdf.PdfDocument
-import com.synfusion.pipelistpro.data.models.CartItem
 import com.synfusion.pipelistpro.data.models.Project
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -18,8 +17,6 @@ import java.util.Locale
 object PdfExportManager {
     private const val PAGE_WIDTH = 595
     private const val PAGE_HEIGHT = 842
-    private const val MARGIN = 36f
-    private const val BOTTOM = 786f
 
     suspend fun generatePdf(context: Context, project: Project): File? = withContext(Dispatchers.IO) {
         if (project.items.isEmpty()) return@withContext null

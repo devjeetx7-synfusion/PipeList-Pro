@@ -56,7 +56,7 @@ fun SettingsScreen(viewModel: ProjectViewModel, navController: NavController) {
     if (showAbout) {
         AlertDialog(
             onDismissRequest = { showAbout = false },
-            icon = { Icon(Icons.Default.Plumbing, contentDescription = null) },
+            icon = { Icon(Icons.Default.Build, contentDescription = null) },
             title = { Text("About PipeList Pro") },
             text = { Text("Offline plumbing material list app for quickly preparing, saving, and sharing project-wise material lists.") },
             confirmButton = { TextButton(onClick = { showAbout = false }) { Text("OK") } }
